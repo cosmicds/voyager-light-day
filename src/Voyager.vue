@@ -34,6 +34,7 @@
           <div id="top-content">
             <div id="left-buttons">
               <icon-button
+                id="learn-more-button"
                 class="sheet-toggle"
                 :model-value="showTextSheet && infoSheetTab === 'information'"
                 icon="book-open"
@@ -46,6 +47,7 @@
                 @activate="() => toggleInfoSheetTab('information')"
               />
               <icon-button
+                id="user-guide-button"
                 class="sheet-toggle"
                 :model-value="showTextSheet && infoSheetTab === 'user-guide'"
                 icon="question"
@@ -58,6 +60,7 @@
                 @activate="() => toggleInfoSheetTab('user-guide')"
               />
               <icon-button
+                id="tour-button"
                 v-model="showTour"
                 class="sheet-toggle"
                 icon="signs-post"
@@ -251,7 +254,7 @@
         v-show="showTextSheet"
         id="side-panel-sheet"
         v-model:tab="infoSheetTab"
-        v-focus-toggle="showTextSheet"
+        v-focus-grab="showTextSheet"
         only-show-one
         align-tabs="start"
         @close="showTextSheet = false"
@@ -363,7 +366,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, computed, onMounted, watch } from "vue";
+import { ref, shallowRef, computed, onMounted, watch, nextTick } from "vue";
 import type { StyleValue } from "vue";
 import { WWTControl } from "@wwtelescope/engine";
 import { WWTComponent as WorldWideTelescope, engineStore } from "@wwtelescope/engine-pinia";
@@ -852,6 +855,24 @@ const drawerOpen = computed({
 import { mutuallyExclusive } from "./composables/utils";
 // only one of the tour, text sheet, and user guide sheet can be open at a time
 mutuallyExclusive(showTour, showTextSheet, showUserGuideSheet);
+
+// When the drawer closes, focus goes back to the button for what it was showing.
+// Each content has exactly one opener, so the button follows from the content
+// and there's no need to record who opened it -- which v-focus-toggle does, and
+// gets wrong after a tab switch, since it only records on the first open.
+// Switching between contents leaves the drawer open, so the newly opened
+// content keeps the focus it grabs.
+const drawerOpenerId = computed(() => {
+  if (showTour.value) return "tour-button";
+  if (showTextSheet.value) return infoSheetTab.value === "user-guide" ? "user-guide-button" : "learn-more-button";
+  return null;
+});
+watch(drawerOpenerId, (now, before) => {
+  if (now === null && before) {
+    // after the DOM update, so the closing content can't take focus back
+    nextTick(() => document.getElementById(before)?.focus());
+  }
+});
 
 
 function closeSplashScreen() {
