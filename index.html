@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- Google Analytics -->
+  <script>
+    // Logic derived from https://stackoverflow.com/a/61839170
+    const local = (function (hostname=window.location.hostname) {
+      return (
+        (['localhost', '127.0.0.1', '', '::1'].includes(hostname))
+        || (hostname.startsWith('192.168.'))
+        || (hostname.startsWith('10.'))
+      )
+    })();
+    // make this portable (vite probably has another way to do this)
+    window.runningOnLocalhost = local;
+    window.gtagMeasurementId = 'G-C2ELSYY9VC';
+    // country codes for GDPR consent handling.
+    window.euCountryList = [
+      'AT', 'BE', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
+      'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU',
+      'MT', 'NL', 'PT', 'SK', 'SI', 'ES', 'SE', 'GB',
+      'IS', 'LI', 'NO', 'BG', 'PL', 'RO'
+    ];
+  </script>
+  <script>
+    
+    if (!local) {
+      
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic
+      // Region specific behavior
+      // https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior
+
+      gtag('consent', 'default', {
+        analytics_storage: 'granted',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+      });
+      // deny everything by default for EU countries
+      gtag('consent', 'default', {
+        analytics_storage: 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        region: window.euCountryList
+      });
+
+      gtag('js', new Date());
+      gtag('config', window.gtagMeasurementId);
+    }
+  </script>
+  <!-- loading gtag.js and in src/privacy/useGtagConsent.ts -->
+
+  <!-- Declared here once for the whole app rather than in MainComponent's stylesheet, since
+       component stylesheets are unscoped and this avoids re-declaring it if that content ever
+       splits across files. Served as woff2 - 17kB, against 55kB as TrueType - with the .ttf
+       original kept as a fallback src. Not preloaded: fetching it up front only pushes the app
+       bundle back, and `font-display: swap` keeps text readable in a fallback face until it lands. -->
+  <style>@font-face{font-family:Highway Gothic Narrow;src:url(./fonts/HighwayGothicNarrow.woff2)format("woff2"),url(./fonts/HighwayGothicNarrow.ttf)format("truetype");font-display:swap}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="On November 18, 2026, 5:16AM EST the Voyager 1 spacecraft will be 1 light day away from the Earth. This CosmicDS story celebrates this milestone by taking the viewer on the Voyager mission's journey of discovery.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://projects.cosmicds.cfa.harvard.edu/voyager-light-day/">
+  <meta property="og:title" content="Voyager">
+  <meta property="og:description" content="On November 18, 2026, 5:16AM EST the Voyager 1 spacecraft will be 1 light day away from the Earth. This CosmicDS story celebrates this milestone by taking the on viewer the Voyager mission's journey of discovery.">
+  <meta property="og:site_name" content="Voyager at 1 Light Day | Cosmic Data Stories">
+  <meta property="og:image" content="https://projects.cosmicds.cfa.harvard.edu/voyager-light-day/preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="960">
+  <meta property="og:image:height" content="504">
+  <meta property="og:image:alt" content="Learn about Voyager's journey of discovery in this Cosmic Data Story.">
+  <meta name="twitter:site" content="@CosmicDataStory">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@CosmicDataStory">
+  <link rel="icon" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon.png">
+  <link rel="apple-touch-icon" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon-57.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon-72.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon-114.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon-144.png">
+  <link rel="shortcut icon" href="https://projects.cosmicds.cfa.harvard.edu/cds-website/cosmicds-favicon.ico">
+  <link rel="canonical" href="https://projects.cosmicds.cfa.harvard.edu/voyager-light-day/">
+  <meta name="apple-mobile-web-app-title" content="Voyager at 1 Light Day">
+  <link rel="manifest" href="site.webmanifest">
+  <title>Voyager at 1 Light Day</title>
+  <script type="module" crossorigin src="./assets/index-DbYhEJu2.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-MoP81x7a.css">
+</head>
+
+<body>
+  <noscript>
+    <strong>This page requires JavaScript to run.</strong>
+  </noscript>
+  <div id="app-mount"></div>
+</body>
+
+</html>
