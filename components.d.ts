@@ -12,8 +12,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ClosableDialog: typeof import('./src/components/ClosableDialog.vue')['default']
+    FollowTrajectoryButton: typeof import('./src/components/FollowTrajectoryButton.vue')['default']
     ImageCrossfadeSlider: typeof import('./src/components/ImageCrossfadeSlider.vue')['default']
     Loader: typeof import('./src/components/Loader.vue')['default']
+    MissionTimeSlider: typeof import('./src/components/MissionTimeSlider.vue')['default']
     SplashScreen: typeof import('./src/components/SplashScreen.vue')['default']
     TabbedSheet: typeof import('./src/components/TabbedSheet.vue')['default']
     TabPage: typeof import('./src/components/TabPage.vue')['default']
@@ -22,5 +24,6 @@ declare module 'vue' {
     WebglTest: typeof import('@/components/WebGlTest.vue')['default']
     WebGlTest: typeof import('./src/components/WebGlTest.vue')['default']
     WwtLoader: typeof import('@/components/Loader.vue')['default']
+    WwtTimeControl: typeof import('./src/components/WwtTimeControl.vue')['default']
   }
 }

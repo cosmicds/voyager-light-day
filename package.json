@@ -13,12 +13,14 @@
     "@wwtelescope/engine-pinia": "^0.17.0",
     "focus-trap": "^7.8.0",
     "focus-trap-vue": "^4.1.0",
+    "three": "^0.185.1",
     "vue": "^3.5.43",
     "vuetify": "^3.13.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.8",
+    "@types/three": "^0.185.0",
     "@vitejs/plugin-vue": "^6.0.9",
     "eslint": "^10.11.0",
     "eslint-plugin-vue": "^10.11.1",
@@ -54,7 +56,8 @@
   },
   "packageManager": "yarn@4.12.0",
   "resolutions": {
-    "pinia": "^2.3.1"
+    "pinia": "^2.3.1",
+    "@cosmicds/vue-toolkit": "portal:../vue-toolkit"
   },
   "name": "@cosmicds/voyager"
 }

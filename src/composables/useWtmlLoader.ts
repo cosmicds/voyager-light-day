@@ -342,7 +342,6 @@ export function useWtml(
               const ra = child.get_RA() * 15;
               const dec = child.get_dec();
               const roll = _iset.get_rotation();
-              // @ts-expect-error _guessZoomSetting exists
               const zoomDeg = _iset._guessZoomSetting(WWTControl.singleton.renderContext.viewCamera.zoom);
               store.gotoRADecZoom({
                 raRad: ra * Math.PI / 180,

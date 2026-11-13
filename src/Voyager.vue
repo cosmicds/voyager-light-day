@@ -94,8 +94,21 @@
                 tooltip-location="start"
                 size="lg"
               />
+              <wwt-time-control
+                hide-time-input
+                hide-set-time
+                hide-status
+              />
             </div>
-            <div id="center-buttons"></div>
+            <div id="center-buttons">
+              <div
+                v-if="voyagerLightTime"
+                id="light-time"
+              >
+                <div class="light-time-label">Distance from Earth in light time</div>
+                <div class="light-time-value">{{ voyagerLightTime }}</div>
+              </div>
+            </div>
             <div id="right-buttons">
               <icon-button
                 v-if="kiosk && !fullscreen"
@@ -126,6 +139,37 @@
                   />
                 </template>
               </ShareButton>
+              <div id="frame-controls">
+                <v-select
+                  v-model="trackingCenter"
+                  :items="SOLAR_SYSTEM_OBJECT_ITEMS"
+                  label="Track (camera center)"
+                  density="compact"
+                  hide-details
+                />
+                <FollowTrajectoryButton
+                  :position-at="voyagerPositionAt"
+                  :frame="VOYAGER_FRAME"
+                  label="Follow Voyager"
+                />
+                <v-switch
+                  v-model="modelRealSize"
+                  label="Voyager model at real size"
+                  density="compact"
+                  hide-details
+                />
+                <v-slider
+                  v-model="modelLogScale"
+                  :disabled="modelRealSize"
+                  :min="0"
+                  :max="12"
+                  :step="0.01"
+                  label="scale (log10)"
+                  thumb-label
+                  density="compact"
+                  hide-details
+                />
+              </div>
             </div>
           </div>
 
@@ -134,14 +178,14 @@
                  below or floating out of it, so focus order doesn't jump around when
                  the layout switches between the two. -->
             <div id="tour-floating-location" />
-            <!-- example: crossfade between the Hubble and JWST views of the Carina Nebula -->
-            <image-crossfade-slider
-              v-if="showTour && tour.stepID.value === 'carina' && hstCarina.imagesetLayer && jwstCarina.imagesetLayer"
-              :left="hstCarina.imagesetLayer"
-              :right="jwstCarina.imagesetLayer"
-              left-label="Hubble"
-              right-label="Webb"
-              @mousedown="opacitySliderUses.increment()"
+            <!-- the whole mission, log in time since launch -->
+            <MissionTimeSlider
+              id="mission-slider"
+              :start="voyagerSpan.start"
+              :end="voyagerSpan.end"
+              :step-ms="SLIDER_STEP_MS"
+              :log-scale-days="100"
+              @mousedown="missionSliderUses.increment()"
             />
           </div>
           
@@ -199,7 +243,31 @@
           :class="{'floating-tour': floatingTour}"
           :tour="tour"
           :small-size="false"
-        />
+        >
+          <template #default="{ step }">
+            <div class="selected-info-tour voyager-event">
+              <h3>{{ step.title }}</h3>
+              <p class="event-date">{{ step.event.date.toISOString().replace("T", " ").slice(0, 16) }} UT</p>
+              <img
+                :src="step.event.image"
+                :alt="step.title"
+              />
+              <p class="event-credit">Image: {{ step.event.imageTaken }} / {{ step.event.credit }}</p>
+              <!-- the clock around this event -->
+              <MissionTimeSlider
+                :start="stepWindow.start"
+                :end="stepWindow.end"
+                :step-ms="SLIDER_STEP_MS"
+              />
+              <p
+                v-for="(paragraph, i) in step.text"
+                :key="i"
+              >
+                {{ paragraph }}
+              </p>
+            </div>
+          </template>
+        </TourSheet>
       </Teleport>
       <!--
         The Tabbed Sheet and TabPage are vue "tightly coupled" components
@@ -347,11 +415,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, shallowRef, computed, onMounted, watch } from "vue";
 import type { StyleValue } from "vue";
-import { WWTControl, Coordinates } from "@wwtelescope/engine";
-import { D2R } from "@wwtelescope/astro";
-import { GotoRADecZoomParams, WWTComponent as WorldWideTelescope, engineStore } from "@wwtelescope/engine-pinia";
+import { WWTControl } from "@wwtelescope/engine";
+import { WWTComponent as WorldWideTelescope, engineStore } from "@wwtelescope/engine-pinia";
 import {
   useWWTKeyboardControls,
   useFullscreen,
@@ -383,26 +450,9 @@ const store = engineStore();
 
 useWWTKeyboardControls(store);
 
-// camera from url //
-// example of loading state.
+// state in the url (the share button and the tour step) //
 import { useUrlState } from "./composables/useUrlState";
 const urlState = useUrlState({ autoUpdate: true, inAddressBar: false, clearOnLoad: true });
-
-// camera position in the url, in degrees. zoom is store.zoomDeg / 6 (vertical FOV convention).
-import { refThrottled } from "@vueuse/core";
-const raDeg = refThrottled(computed(() => (store.raRad * 180 / Math.PI).toFixed(4)), 500);
-const decDeg = refThrottled(computed(() => (store.decRad * 180 / Math.PI).toFixed(4)), 500);
-const zoom = refThrottled(computed(() => (store.zoomDeg / 6).toFixed(4)), 500);
-urlState.track("ra", raDeg);
-urlState.track("dec", decDeg);
-urlState.track("zoom", zoom);
-
-const GALACTIC_CENTER = Coordinates.galactictoJ2000(0, 0);
-const _initialCameraParams = (
-  urlState.loadedFromUrl?.value.includes("ra")
-    ? { raRad: parseFloat(raDeg.value) * D2R, decRad: parseFloat(decDeg.value) * D2R, zoomDeg: parseFloat(zoom.value) * 6 }
-    : { raRad: GALACTIC_CENTER[0] * D2R, decRad: GALACTIC_CENTER[1] * D2R, zoomDeg: 360 }
-) as Omit<GotoRADecZoomParams, "instant">;
 
 // kiosk / fullscreen //
 const kiosk = new URLSearchParams(window.location.search).get("kiosk")?.toLowerCase() === "true";
@@ -458,19 +508,6 @@ const cssVars = computed(() => {
   } as StyleValue;
 });
 
-// loading layers //
-import { useWtml } from "./composables/useWtmlLoader";
-
-const hstCarina = useWtml("https://web.wwtassets.org/specials/2023/cosmicds-carina/collection/carina_nebula.wtml", {
-  single: true,
-  goTo: false,
-});
-
-const jwstCarina = useWtml("https://web.wwtassets.org/specials/2023/cosmicds-carina/collection/jwst_carina.wtml", {
-  single: true,
-  goTo: false,
-});
-
 const layersLoaded = ref(false);
 const positionSet = ref(false);
 const ready = computed(() => layersLoaded.value && positionSet.value);
@@ -487,18 +524,180 @@ onMounted(() => {
   }
 
   store.waitForReady().then(async () => {
-    store.gotoRADecZoom({
-      ..._initialCameraParams,
-      instant: true,
-    }).then(() => (positionSet.value = true));
-
-    // wait for all layers to finish loading; add more promises to the array as needed
-    Promise.all([hstCarina.ready, jwstCarina.ready]).then(() => (layersLoaded.value = true));
+    setUpVoyagerScene();
+    positionSet.value = true;
+    layersLoaded.value = true;
 
     createUserEntry();
     initializePrompt();
   });
 });
+
+// voyager scene //
+import { SpaceTimeController, type SpreadSheetLayer } from "@wwtelescope/engine";
+import { SolarSystemObjects } from "@wwtelescope/engine-types";
+import { useGeometricPlanetPositions } from "./horizons/geometricPlanets";
+// WWT's 3D planets are apparent positions; use geometric ones so Horizons data lines up
+useGeometricPlanetPositions();
+
+import { tdbNow, SOLAR_SYSTEM_OBJECT_ITEMS } from "./horizons/horizons_helpers";
+import { HorizonsVectorTable } from "./horizons/HorizonsVectorTable";
+import {
+  bodyCenterInScene,
+  createTrajectoryLine,
+  drawTrajectoryLineInFrame,
+  LINE_TOLERANCE_AU,
+  type TrajectoryLine,
+} from "./horizons/orbitLine";
+import { createMovingMarkerLayer, skyMapReady } from "./horizons/horizonsSpreadsheet";
+import { createSaturnMoonOrbits, createSaturnMoonLayers } from "./horizons/saturnMoons";
+import { distanceFromBodyKm, lightTimeSeconds } from "./horizons/lightTime";
+import voyagerData from "@/assets/voyager_spline_knots-sun.ecsv?raw";
+import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
+
+import { useScaledZoom } from "./composables/useScaledZoom";
+const { ZOOM_MAX, ZOOM_MIN } = useScaledZoom();
+
+// Voyager 1 closest approach to Saturn (the Titan flyby is earlier the same day, ~05:41 UT)
+const START_TIME = new Date("1980-11-12T23:46:00Z");
+
+// what the WWT camera tracks (the scene is drawn relative to it)
+const trackingCenter = ref<SolarSystemObjects>(SolarSystemObjects.saturn);
+watch(trackingCenter, (obj) => store.setTrackedObject(obj));
+
+// Voyager 1, one Horizons table, drawn relative to the Sun (the frame with the smallest flyby errors against WWT's planets)
+const voyagerTable = new HorizonsVectorTable(voyagerData);
+const VOYAGER_FRAME = SolarSystemObjects.sun;
+const voyagerPositionAt = voyagerTable.positionAt(VOYAGER_FRAME);
+
+// Voyager 2, the same way
+const voyager2Table = new HorizonsVectorTable(voyager2Data);
+const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
+const VOYAGER_2_COLOR = "#4fa3ff";
+
+let voyagerLine: TrajectoryLine | null = null;
+let voyager2Line: TrajectoryLine | null = null;
+const voyagerLayer = shallowRef<SpreadSheetLayer | null>(null);
+const saturnMoonLayers = shallowRef<SpreadSheetLayer[]>([]);
+
+function drawVoyagerOrbit() {
+  // J2000 points, rotated to the scene's ecliptic of date
+  const jdtdb = tdbNow();
+  if (voyagerLine) {
+    drawTrajectoryLineInFrame(voyagerLine, VOYAGER_FRAME, jdtdb);
+  }
+  if (voyager2Line) {
+    drawTrajectoryLineInFrame(voyager2Line, VOYAGER_FRAME, jdtdb);
+  }
+}
+
+function createVoyagerOrbit() {
+  voyagerLine = createTrajectoryLine(voyagerTable.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU);
+  voyager2Line = createTrajectoryLine(voyager2Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU, VOYAGER_2_COLOR);
+  store.addFrameCallback(drawVoyagerOrbit);
+}
+
+function createVoyagerLayer() {
+  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt);
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, "#df1c23", voyagerPositionAt).then(
+    (layer) => (voyagerLayer.value = layer),
+  );
+}
+
+// time sliders: the whole file, in 1 minute steps
+const voyagerSpan = voyagerTable.timeSpan;
+const SLIDER_STEP_MS = 60 * 1000;
+
+import * as THREE from "three";
+import { useThreeModel } from "./three-helpers";
+import glbUrl from "@/assets/Voyager.glb?url";
+
+const renderThree = ref(true);
+let voyagerModel: THREE.Group | null = null;
+const modelRealSize = ref(false);
+const modelLogScale = ref(7);
+const METERS_PER_AU = 149597870700;
+
+// the dish faces glb +y
+const DISH_AXIS = new THREE.Vector3(0, 1, 0);
+const dish = new THREE.Vector3();
+
+/** unit vector from `from` to a body (three.js X, Y, Z) */
+function directionTo(body: SolarSystemObjects, from: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
+  const b = bodyCenterInScene(body);
+  return out.set(b.x - from.x, b.z - from.y, b.y - from.z).normalize();
+}
+
+/** The model on the red dot, its dish on Earth (no roll). three.js is (X, Y, Z) */
+function setVoyagerModelPosition(time: Date) {
+  if (!voyagerModel) {
+    return;
+  }
+  const t = time.getTime();
+  const p = voyagerPositionAt(t);
+  voyagerModel.visible = p !== null;
+  if (!p) {
+    return;
+  }
+  const origin = bodyCenterInScene(VOYAGER_FRAME);
+  voyagerModel.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
+  voyagerModel.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyagerModel.position, dish));
+  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  voyagerModel.scale.setScalar(scale / METERS_PER_AU);
+}
+
+const voyagerLightTime = ref("");
+
+/** seconds as "22 h 41 m 07 s" */
+function hoursMinutesSeconds(seconds: number): string {
+  const s = Math.round(seconds);
+  const pad = (n: number) => `${n}`.padStart(2, "0");
+  return `${Math.floor(s / 3600)} h ${pad(Math.floor((s % 3600) / 60))} m ${pad(s % 60)} s`;
+}
+
+/** Voyager's distance from Earth as light time (distance ÷ c), for the display */
+function updateVoyagerLightTime() {
+  const v = voyagerPositionAt(SpaceTimeController.get_now().getTime());
+  voyagerLightTime.value = v
+    ? hoursMinutesSeconds(lightTimeSeconds(distanceFromBodyKm(v, VOYAGER_FRAME, SolarSystemObjects.earth)))
+    : "";
+}
+
+/** the solar-system view, Voyager's line, marker and model, and Saturn's moons. Call once WWT is ready */
+function setUpVoyagerScene() {
+  WWTControl.singleton.set_zoomMax(ZOOM_MAX);
+  WWTControl.singleton.setSolarSystemMaxZoom(ZOOM_MAX);
+  // the wheel and keys stop here too (the engine's own floor is 1e-8, a 665 m camera distance)
+  WWTControl.singleton.setSolarSystemMinZoom(ZOOM_MIN);
+
+  store.setBackgroundImageByName("Solar System");
+  store.applySetting(["actualPlanetScale", false]);
+  store.applySetting(["solarSystemScale", 1]);
+  store.applySetting(["solarSystemCosmos", true]);
+  store.applySetting(["solarSystemMilkyWay", true]);
+  store.applySetting(["solarSystemStars", true]);
+  store.applySetting(["solarSystemOrbits", true]);
+  store.setClockSync(false);
+  store.setTrackedObject(trackingCenter.value);
+  // a tour step from the url has already set its event's time (its setup runs first)
+  if (!showTour.value) {
+    store.setTime(START_TIME);
+  }
+
+  createVoyagerOrbit();
+  createSaturnMoonOrbits(store);
+  // the engine's moon file clears every layer and map when it arrives
+  skyMapReady().then(() => {
+    createSaturnMoonLayers(store).then((layers) => (saturnMoonLayers.value = layers));
+    // after the moons, so Voyager's marker is drawn on top where they overlap
+    createVoyagerLayer();
+  });
+
+  // before useThreeModel, so the model is placed before three renders in the same frame
+  store.addFrameCallback(() => setVoyagerModelPosition(SpaceTimeController.get_now()));
+  store.addFrameCallback(updateVoyagerLightTime);
+  useThreeModel(store, glbUrl, renderThree, (model) => (voyagerModel = model));
+}
 
 // tracking //
 import {
@@ -518,20 +717,20 @@ const gtagConsent = useGtagConsent(true);
 /** app tracking setup */
 const STORY_NAME = "voyager" as const;
 const appTime = createTrackingTimer({active: ref(true)});
-const opacitySliderUses = createTrackingCounter();
+const missionSliderUses = createTrackingCounter();
 const userGuideTime = createTrackingTimer({active: computed(() => showTextSheet.value && infoSheetTab.value === "user-guide")});
 
 function resetTrackingData() {
   appTime.reset();
   userGuideTime.reset();
-  opacitySliderUses.reset();
+  missionSliderUses.reset();
 }
 
 function getTrackingData() {
   return {
     app_time_ms: appTime.getTotalTime(),
     user_guide_time_ms: userGuideTime.getTotalTime(),
-    opacity_slider_use_count: opacitySliderUses.count.value,
+    mission_slider_use_count: missionSliderUses.count.value,
   };
 }
 
@@ -586,48 +785,42 @@ import {
   type BaseTourStepContent,
 } from  "@cosmicds/vue-toolkit";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+import { VOYAGER_1_EVENTS, eventWindow, type MissionEvent } from "./voyagerEvents";
+
 interface TourStepContent extends BaseTourStepContent {
-  // add any additional properties you want to use in your tour steps here
+  event: MissionEvent;
 }
 const tour = useTour<TourStepContent>({
   /**
    be careful if you have multiple moves when your app starts up
    so that they don't conflict with each other.
    */
-  steps: [
-    {
-      id: "crab",
-      title: "Crab Nebula",
-      text: ["Here's the Crab Nebula!"],
-      setup: async () => {
-        store.waitForReady().then(() => {
-          store.gotoRADecZoom({
-            raRad: 83.6331 * D2R, decRad: 22.0145 * D2R, zoomDeg: 1, instant: true,
-          });
-        });
-      },
+  // one step per mission event: the clock goes to it and the camera tracks its body
+  steps: VOYAGER_1_EVENTS.map((event) => ({
+    id: event.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    title: event.title,
+    text: [event.caption],
+    event,
+    setup: async () => {
+      store.waitForReady().then(() => {
+        store.setTime(event.date);
+        if (event.track !== undefined) {
+          trackingCenter.value = event.track;
+        }
+      });
     },
-    {
-      id: "carina",
-      title: "Carina Nebula",
-      text: ["Here's the Carina Nebula! Use the slider to crossfade between Hubble and Webb images."],
-      setup: async () => {
-        store.waitForReady().then(() => {
-          store.gotoRADecZoom({
-            raRad: 159.230 * D2R, decRad: -58.650 * D2R, zoomDeg: 0.211, rollRad: 103.075 * D2R, instant: true,
-          });
-        });
-      },
-    },
-    {
-      id: "end",
-      title: "The End",
-      text: ["That's all folks!"],
-    }
-  ],
+  })),
 });
 urlState.track("tour", tour.stepID);
+
+// the step's slider: its event's window (it holds no other event), within the data
+const stepWindow = computed(() => {
+  const { start, end } = eventWindow(VOYAGER_1_EVENTS, tour.stepIndex.value);
+  return {
+    start: new Date(Math.max(start.getTime(), voyagerSpan.start.getTime())),
+    end: new Date(Math.min(end.getTime(), voyagerSpan.end.getTime())),
+  };
+});
 
 function startTour() {
   showTour.value = true;
@@ -798,6 +991,72 @@ body {
   align-items: center;
   gap: 1rem;
 
+}
+
+#frame-controls {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+  padding: 8px;
+  background-color: rgba(3, 1, 37, 0.8);
+}
+
+#center-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#light-time {
+  padding: 6px 14px;
+  text-align: center;
+  background-color: rgba(3, 1, 37, 0.8);
+
+  .light-time-label {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
+  .light-time-value {
+    font-family: monospace;
+    font-size: 18px;
+  }
+}
+
+// leaves room for the credit logos
+#mission-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 5% 2.5rem;
+}
+
+.voyager-event {
+  img {
+    width: 100%;
+    max-height: 20vh;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .event-date,
+  .event-credit {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+
+  // the track on its own line, the dates and clock under it
+  .mission-time-slider {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 0.5em;
+
+    .v-slider {
+      flex-basis: 100%;
+      order: -1;
+    }
+  }
 }
 
 // neither #logo-credits nor #icons-container are flex
