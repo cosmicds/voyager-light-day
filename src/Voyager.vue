@@ -997,10 +997,21 @@ body {
 }
 
 .voyager-event {
+  // A fixed-shape frame with the whole image fitted inside, rather than a
+  // full-width strip cropped to fill. The strip's shape followed the screen, and
+  // cropping a tall image like the Earth/Moon one to it left only the black gap
+  // between them. Almost every image is on a black sky, so the frame's black
+  // fill blends in.
+  // The width cap rather than a max-height is what keeps the frame 4:3: a
+  // max-height would leave the width at 100% and stretch the frame wide on
+  // short screens. 40vh wide at 4:3 is 30vh tall.
   img {
-    width: 100%;
-    max-height: 20vh;
-    object-fit: cover;
+    display: block;
+    width: min(100%, 40vh);
+    margin-inline: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background: black;
     border-radius: 4px;
   }
 
