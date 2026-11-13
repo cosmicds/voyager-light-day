@@ -1010,6 +1010,7 @@ body {
   aspect-ratio: 1/1;
   // even padding
   padding: 8px !important;
+  border-width: 2px !important;
 }
 
 .icon-wrapper.tonal {
