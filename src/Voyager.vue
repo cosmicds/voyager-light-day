@@ -131,10 +131,6 @@
           </div>
 
           <div id="bottom-content">
-            <!-- Tab order lands here whether the tour is docked in the drawer right
-                 below or floating out of it, so focus order doesn't jump around when
-                 the layout switches between the two. -->
-            <div id="tour-floating-location" />
             <!-- the whole mission, log in time since launch -->
             <MissionTimeSlider
               id="mission-slider"
@@ -182,28 +178,32 @@
       :class="sidePanel ? 'drawer-side' : 'drawer-bottom'"
       :temporary="false"
     >
-      <!-- disable=true for non-floating tour -->
-      <!-- 
-      Teleporting to the "body" places it last in the DOM so last in the tab-focus order.
-      we actually want it pretty early, so instead of hacking a focus control, let's just put it where it belongs. 
-      This won't help the case where we are in the v-navigation-drawer though
-      -->
-      <Teleport 
-        to="#tour-floating-location" 
-        defer
-        :disabled="!floatingTour" 
+      <TourSheet
+        v-if="showTour"
+        v-focus-grab="showTour"
+        tabindex="-1"
+        :tour="tour"
+        :small-size="false"
+        :accent-color="accentColor"
+        :border-color="borderColor"
       >
-        <TourSheet
-          v-if="showTour"
-          v-focus-grab="showTour"
-          tabindex="-1"
-          :class="{'floating-tour': floatingTour}"
-          :tour="tour"
-          :small-size="false"
-        >
-          <template #default="{ step }">
-            <div class="selected-info-tour voyager-event">
+        <template #default="{ step }">
+          <div class="selected-info-tour voyager-event">
+            <!-- our own header rather than the toolkit's show-close, whose icon
+                 floats over the corner and so over the scrollbar. This row stays
+                 put and only the body below it scrolls. -->
+            <div class="voyager-event-header">
               <h3>{{ step.title }}</h3>
+              <v-btn
+                class="tour-close-button"
+                icon="mdi-close"
+                variant="text"
+                density="compact"
+                aria-label="Close tour"
+                @click="showTour = false"
+              />
+            </div>
+            <div class="voyager-event-body">
               <p class="event-date">{{ step.event.date.toISOString().replace("T", " ").slice(0, 16) }} UT</p>
               <img
                 :src="step.event.image"
@@ -223,9 +223,9 @@
                 {{ paragraph }}
               </p>
             </div>
-          </template>
-        </TourSheet>
-      </Teleport>
+          </div>
+        </template>
+      </TourSheet>
       <!--
         The Tabbed Sheet and TabPage are vue "tightly coupled" components
         This means a TabPage can only be used within an TabbedSheet.
@@ -422,7 +422,7 @@ function openInfoSheetTab(tabValue: string) {
 
 // styles //
 import { useAppLayout } from "./composables/useAppLayout";
-const { smallSize, sidePanel, floatingPanel: floatingTour, viewportWidth } = useAppLayout();
+const { smallSize, sidePanel, viewportWidth } = useAppLayout();
 const DRAWER_WIDTH_FRACTION = 34; // 34% of the viewport width
 const drawerWidth = computed(() => Math.round(viewportWidth.value * DRAWER_WIDTH_FRACTION / 100.));
 
@@ -433,6 +433,7 @@ const theme = useTheme();
 // can access them directly as `color="primary" on the prop, and they are aleady available in the CSS as --v-theme-primary and --v-theme-secondary
 const accentColor = computed(() => theme.current.value.colors.primary);
 const accentColor2 = computed(() => theme.current.value.colors.secondary);
+const borderColor = computed(() => theme.current.value.colors.primary);
 
 const { xs } = useDisplay();
 
@@ -803,7 +804,7 @@ watch(showTour, (newVal) => {
 // using the navigation drawer layout for multiple things, means
 // it's a bit easier to have a computed combine the logic
 const drawerOpen = computed({
-  get: () => !showSplashScreen.value && (showTextSheet.value || showUserGuideSheet.value || (showTour.value && !floatingTour.value)),
+  get: () => !showSplashScreen.value && (showTextSheet.value || showUserGuideSheet.value || showTour.value),
   set: (open: boolean) => {
     if (!open) {
       showTextSheet.value = false;
@@ -1082,13 +1083,76 @@ body {
   padding: 0 1rem 1rem;
 }
 
-/* floats the tour: pulled out of the drawer (via Teleport) into #bottom-content's flex row, alongside e.g. the crossfade slider */
-.floating-tour.tour-text {
-  flex: 0 1 auto;
-  width: 30vw;
-  max-width: calc(100vw - 2rem);
+/* A fixed title row with a scrolling body under it. The toolkit's own scroll
+   area is turned into a plain flex column so that the scrolling happens one
+   level down, in .voyager-event-body, and the scrollbar starts below the title
+   and close button instead of running up beside them. */
+.tour-sheet .selected-info-scroll {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tour-sheet .voyager-event {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
-  max-height: 400px;
+}
+
+.voyager-event-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.voyager-event-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* why-roman's Back/Next: a dark fill with an accent outline, rather than the
+   toolkit's solid accent fill. !important because Vuetify sets a hex
+   `color` prop as inline background and text colors. */
+.tour-sheet .tour-text-controls .v-btn {
+  background-color: rgb(var(--v-theme-secondary)) !important;
+  color: white !important;
+}
+
+/* The empty dividers between the step dots were 16px each (Vuetify's
+   0 8px padding) -- wider than the dots themselves, and why 10 dots overflowed
+   a narrow drawer. The toolkit tries to shrink them, but its rule is scoped
+   and doesn't reach Vuetify's breadcrumb internals. Dropping them leaves the
+   spacing to the row's space-evenly, so the dots spread out when there's room
+   and sit close together when there isn't. */
+.tour-sheet .tour-dots .v-breadcrumbs-divider {
+  display: none;
+}
+
+/* Even touching, the dots don't fit between Back and Next in a narrow box (the
+   left drawer on a landscape phone is ~230px), so there they get a row of
+   their own above the buttons. The 300px is sized for ~13 steps: 13 dots at
+   ~10px each plus a few px of space, plus the 128px of buttons. Revisit it if
+   the tour grows well past that. */
+.tour-sheet.tour-text {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .tour-sheet.tour-text .tour-text-controls {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    row-gap: 0.5rem;
+  }
+
+  .tour-sheet.tour-text .tour-text-controls .tour-dots {
+    order: -1;
+    flex: 1 1 100%;
+    max-width: none;
+  }
 }
 
 /* easier to just force it than wrestle with vuetify's built-in positioning */

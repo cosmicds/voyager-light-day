@@ -17,17 +17,12 @@ function createAppLayout() {
   const isMobile = computed(() => xs.value);
   const touchscreen = supportsTouchscreen();
 
-  // adapted from why-roman roomy layout
-  const ROOMY_MIN_HEIGHT = 600;
-  const floatingPanel = computed(() => sidePanel.value && !smallSize.value && viewportHeight.value >= ROOMY_MIN_HEIGHT);
-
   return {
     viewportWidth,
     viewportHeight,
     smallSize,
     isLandscape,
     sidePanel,
-    floatingPanel,
     isMobile,
     touchscreen,
   };
