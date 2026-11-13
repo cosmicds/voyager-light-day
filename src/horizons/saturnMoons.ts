@@ -56,7 +56,7 @@ function distanceFromCamera(body: SolarSystemObjects): number {
   return Math.hypot(b.x - c.x, b.y - c.y, b.z - c.z);
 }
 
-const nearSaturn = () => distanceFromCamera(SATURN) < 2; // 2au works
+const nearSaturn = () => distanceFromCamera(SATURN) < 1; // 1au works
 
 /** Orbit lines for Saturn's major moons (their 1980 orbits), drawn around Saturn every frame */
 export function createSaturnMoonOrbits(store: EngineStore) {
