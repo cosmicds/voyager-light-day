@@ -34,6 +34,8 @@
           <div id="top-content">
             <div id="left-buttons">
               <icon-button
+                class="sheet-toggle"
+                :model-value="showTextSheet && infoSheetTab === 'information'"
                 icon="book-open"
                 aria-label="Learn More"
                 :color="accentColor"
@@ -41,9 +43,11 @@
                 tooltip-text="Learn More"
                 tooltip-location="start"
                 size="lg"
-                @activate="() => openInfoSheetTab('information')"
+                @activate="() => toggleInfoSheetTab('information')"
               />
               <icon-button
+                class="sheet-toggle"
+                :model-value="showTextSheet && infoSheetTab === 'user-guide'"
                 icon="question"
                 aria-label="User guide"
                 :color="accentColor"
@@ -51,10 +55,11 @@
                 tooltip-text="User guide"
                 tooltip-location="start"
                 size="lg"
-                @activate="() => openInfoSheetTab('user-guide')"
+                @activate="() => toggleInfoSheetTab('user-guide')"
               />
               <icon-button
                 v-model="showTour"
+                class="sheet-toggle"
                 icon="signs-post"
                 aria-label="Show Tour"
                 :color="accentColor"
@@ -414,8 +419,12 @@ const showTextSheet = ref(false);
 const infoSheetTab = ref("");
 const showUserGuideSheet = ref(false);
 
-/** open a tab on the info sheet */
-function openInfoSheetTab(tabValue: string) {
+/** open a tab on the info sheet, or close the sheet if it's already showing that tab */
+function toggleInfoSheetTab(tabValue: string) {
+  if (showTextSheet.value && infoSheetTab.value === tabValue) {
+    showTextSheet.value = false;
+    return;
+  }
   infoSheetTab.value = tabValue;
   showTextSheet.value = true;
   // we don't want both open at the same time
@@ -1079,6 +1088,17 @@ body {
   // even padding
   padding: 8px !important;
   border-width: 2px !important;
+}
+
+/* The drawer buttons' pressed state: filled gold with a purple icon, instead of
+   the toolkit's default of just turning the icon and border white. The id is
+   for specificity: it has to beat the toolkit's scoped .active and :focus
+   rules, and :focus would otherwise recolor the icon gold on the gold fill
+   right after a click. */
+#left-buttons .icon-wrapper.sheet-toggle.active {
+  background-color: rgb(var(--v-theme-primary));
+  border-color: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-secondary));
 }
 
 .icon-wrapper.tonal {
