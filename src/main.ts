@@ -43,6 +43,8 @@ library.add(faCompress);
 import hide from "./directives/hide";
 import focusToggle from "./directives/focusToggle";
 import focusGrab from "./directives/focusGrab";
+// need to fix SpeedControl from the toolkit
+import { ClickOutside } from "vuetify/directives";
 
 import { addWwtlib } from "./wwt-hacks";
 addWwtlib();
@@ -61,6 +63,7 @@ createApp(Voyager, {
   .directive( "hide", hide)
   .directive("focus-toggle", focusToggle)
   .directive("focus-grab", focusGrab)
+  .directive("click-outside", ClickOutside)
 
   // Mount
   .mount("#app-mount");
