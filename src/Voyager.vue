@@ -578,7 +578,8 @@ const voyager1PositionAt = voyager1Table.positionAt(VOYAGER_FRAME);
 // Voyager 2, the same way
 const voyager2Table = new HorizonsVectorTable(voyager2Data);
 const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
-const VOYAGER_2_COLOR = "#4fa3ff";
+const VOYAGER_2_COLOR = "#00ffff";
+const VOYAGER_1_COLOR = "#ffff00";
 
 let voyager1Line: TrajectoryLine | null = null;
 let voyager2Line: TrajectoryLine | null = null;
@@ -600,7 +601,7 @@ function drawVoyagerOrbit() {
 }
 
 function createVoyagerOrbit() {
-  voyager1Line = createTrajectoryLine(voyager1Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU);
+  voyager1Line = createTrajectoryLine(voyager1Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU, VOYAGER_1_COLOR);
   voyager2Line = createTrajectoryLine(voyager2Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU, VOYAGER_2_COLOR);
   store.addFrameCallback(drawVoyagerOrbit);
 }
@@ -608,7 +609,7 @@ function createVoyagerOrbit() {
 function createVoyagerLayer() {
   createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt)
     .then((layer) => (voyager2Layer.value = layer));
-  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, "#df1c23", voyager1PositionAt).then(
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt).then(
     (layer) => (voyager1Layer.value = layer),
   );
 }
