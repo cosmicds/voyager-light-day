@@ -21,15 +21,6 @@
         <p>&amp; let it inspire you to dare to do mighty things. it's reading rainbow</p>
       </div>
     </SplashScreen>
-    
-    <!-- 
-      This dialog contains the video that is displayed when the video icon is clicked 
-      pass `video-src` or `youtube-src` to the VideoWrapper component to show a video.
-    -->
-    <VideoWrapper
-      v-model="showVideo"
-    />
-
 
     <v-main>
       <div id="main-content">
@@ -62,28 +53,6 @@
                 size="lg"
                 @activate="() => openInfoSheetTab('user-guide')"
               />
-              <icon-button
-                icon="mdi-shape-outline"
-                aria-label="Example"
-                :color="accentColor"
-                :focus-color="accentColor"
-                tooltip-text="Example"
-                tooltip-location="start"
-                size="lg"
-                @activate="() => openInfoSheetTab('example')"
-              />
-
-              <icon-button
-                v-model="showVideo"
-                icon="video"
-                aria-label="Watch video"
-                :color="accentColor"
-                :focus-color="accentColor"
-                tooltip-text="Watch video"
-                tooltip-location="start"
-                size="lg"
-              >
-              </icon-button>
               <icon-button
                 v-model="showTour"
                 icon="signs-post"
@@ -122,23 +91,6 @@
                 size="lg"
                 @activate="fullscreen = !fullscreen"
               />
-              <ShareButton
-                :source="urlState.getUrl"
-                :tooltip="false"
-              >
-                <template #activator="activatorProps">
-                  <icon-button
-                    icon="share-nodes"
-                    aria-label="Get link to share selected view"
-                    :color="accentColor"
-                    :focus-color="accentColor"
-                    tooltip-text="Share"
-                    tooltip-location="start"
-                    size="lg"
-                    :activator-props="activatorProps"
-                  />
-                </template>
-              </ShareButton>
               <div id="frame-controls">
                 <v-select
                   v-model="trackingCenter"
@@ -300,22 +252,6 @@
           <p>Sample Science Information</p>
         </tab-page>
 
-        <!--
-        Example of an Info Page with a stable footer and scrollable upper section.
-        -->
-        <tab-page title="Example" name="example">
-          <div class="ip-example-header">[Optional] This will stay at the top</div>
-          <div class="ip-example-body flex-grow-1 overflow-y-auto my-5">
-            <p  
-              v-for="i in Array(100).fill(0)"
-              :key="i"
-            >
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. 
-            </p>
-          </div>
-          <div class="ip-example-footer">This will stay at the bottom</div>
-        </tab-page>
-
         <!-- the user guide is an <TabPage title="User Guide" value="user-guide>...</TabPage>"
          it can be userful to move complex content into a separate component
          -->
@@ -424,7 +360,6 @@ import {
   useFullscreen,
   IconButton,
   CreditLogos,
-  ShareButton,
 } from "@cosmicds/vue-toolkit";
 
 const extraLogos = [
@@ -450,7 +385,7 @@ const store = engineStore();
 
 useWWTKeyboardControls(store);
 
-// state in the url (the share button and the tour step) //
+// state in the url (the tour step) //
 import { useUrlState } from "./composables/useUrlState";
 const urlState = useUrlState({ autoUpdate: true, inAddressBar: false, clearOnLoad: true });
 
@@ -465,8 +400,6 @@ const fullscreen = useFullscreen();
 // ui visibility //
 const splash = new URLSearchParams(window.location.search).get("splash")?.toLowerCase() !== "false";
 const showSplashScreen = ref(splash);
-
-const showVideo = ref(false);
 
 const showWebGL2Warning = ref(false);
 
@@ -1139,8 +1072,5 @@ body {
   padding: 0;
 }
 
-.ip-example-body {
-  background: linear-gradient(to bottom, var(--accent-color), var(--accent-color-2));
-}
 
 </style>

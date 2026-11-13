@@ -13,10 +13,8 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
   faBookOpen,
   faTimes,
-  faVideo,
   faQuestion,
   faSliders,
-  faShareNodes,
   faLightbulb,
   faSignsPost,
   faHouse,
@@ -28,10 +26,8 @@ import {
 
 library.add(faBookOpen);
 library.add(faTimes);
-library.add(faVideo);
 library.add(faQuestion);
 library.add(faSliders);
-library.add(faShareNodes);
 library.add(faLightbulb);
 library.add(faSignsPost);
 library.add(faHouse);
