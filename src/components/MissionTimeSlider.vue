@@ -10,6 +10,8 @@
       density="compact"
       hide-details
       color="white"
+      track-fill-color="primary"
+      thumb-color="primary"
       :aria-label="label ?? 'Mission time'"
       @keydown="onKeydown"
       @update:model-value="(f: number) => setTime(toTime(f))"

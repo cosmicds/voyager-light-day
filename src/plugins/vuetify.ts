@@ -91,10 +91,13 @@ export default createVuetify({
           // we were really doing. so here we define primary (but not secondary) to be the
           // accent color. we alias it in the main app to "accentColor", but `color="primary"`
           // is what should be used on vuetify components
-          primary: "#C4A447",
+          // golds sampled from the Voyager Golden Record artwork
+          primary: "#DEBA68",
           secondary: "#583671",
+          "border": "#FDF5C2",
+          "contrast": "#C4CBFD",
           ...COSMICDS_COLORS,
-        },
+        },    
       },
     },
   },
