@@ -523,7 +523,7 @@ import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
 
 import { useFollowTrajectory } from "./composables/useFollowTrajectory";
 import { useScaledZoom } from "./composables/useScaledZoom";
-const { ZOOM_MAX, ZOOM_MIN, zoomSliderValue, onZoomSlider, zoomIn, zoomOut } = useScaledZoom();
+const { ZOOM_MAX, zoomSliderValue, onZoomSlider, zoomIn, zoomOut, allowCloseZoom } = useScaledZoom();
 
 // Voyager 1 closest approach to Saturn (the Titan flyby is earlier the same day, ~05:41 UT)
 const START_TIME = new Date("1980-11-12T23:46:00Z");
@@ -609,6 +609,11 @@ let voyager2Model: THREE.Group | null = null;
 const modelLogScale = ref(7);
 const METERS_PER_AU = 149597870700;
 
+// zooming in close enough to see the spacecraft only when there's one at actual size to look at;
+// elsewhere WWT's planets break up that close
+const closeZoomAllowed = () => modelLogScale.value === 0 && typeof trackingCenter.value === "string";
+watch(closeZoomAllowed, allowCloseZoom);
+
 // the dish faces glb +y
 const DISH_AXIS = new THREE.Vector3(0, 1, 0);
 const dish = new THREE.Vector3();
@@ -675,8 +680,8 @@ function updateVoyagerLightTime() {
 function setUpVoyagerScene() {
   WWTControl.singleton.set_zoomMax(ZOOM_MAX);
   WWTControl.singleton.setSolarSystemMaxZoom(ZOOM_MAX);
-  // the wheel and keys stop here too (the engine's own floor is 1e-8, a 665 m camera distance)
-  WWTControl.singleton.setSolarSystemMinZoom(ZOOM_MIN);
+  // the zoom floor, which the wheel and keys use too
+  allowCloseZoom(closeZoomAllowed());
 
   store.setBackgroundImageByName("Solar System");
   store.applySetting(["actualPlanetScale", false]);
