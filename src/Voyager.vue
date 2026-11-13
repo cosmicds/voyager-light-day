@@ -99,7 +99,7 @@
                 v-if="voyagerLightTime"
                 id="light-time"
               >
-                <div class="light-time-label">Distance from Earth in light time</div>
+                <div class="light-time-label">Voyager 1 Distance from Earth in Light Travel Time</div>
                 <div class="light-time-value">{{ voyagerLightTime }}</div>
               </div>
             </div>
@@ -1062,8 +1062,9 @@ body {
   background-color: rgba(3, 1, 37, 0.8);
 
   .light-time-label {
-    font-size: 12px;
+    font-size: 14px;
     opacity: 0.8;
+    margin-bottom: 0.25rem;
   }
 
   .light-time-value {
