@@ -125,23 +125,26 @@
                   density="compact"
                   hide-details
                 />
-                <v-switch
-                  v-model="modelRealSize"
-                  label="Voyager model at real size"
-                  density="compact"
-                  hide-details
-                />
-                <v-slider
-                  v-model="modelLogScale"
-                  :disabled="modelRealSize"
-                  :min="0"
-                  :max="12"
-                  :step="0.01"
-                  label="scale (log10)"
-                  thumb-label
-                  density="compact"
-                  hide-details
-                />
+                <!-- log10 of the model's magnification: 0 is actual size -->
+                <div class="model-size">
+                  <div class="model-size-label">Spacecraft size</div>
+                  <v-slider
+                    v-model="modelLogScale"
+                    :min="0"
+                    :max="12"
+                    :step="0.01"
+                    aria-label="Spacecraft size"
+                    density="compact"
+                    hide-details
+                  >
+                    <template #prepend>
+                      <span class="model-size-end">Actual</span>
+                    </template>
+                    <template #append>
+                      <span class="model-size-end">Enlarged</span>
+                    </template>
+                  </v-slider>
+                </div>
               </div>
             </div>
           </div>
@@ -602,7 +605,7 @@ import glbUrl from "@/assets/Voyager.glb?url";
 const renderThree = ref(true);
 let voyager1Model: THREE.Group | null = null;
 let voyager2Model: THREE.Group | null = null;
-const modelRealSize = ref(false);
+// log10 of the models' magnification (0 is actual size)
 const modelLogScale = ref(7);
 const METERS_PER_AU = 149597870700;
 
@@ -630,7 +633,7 @@ function setVoyager1ModelPosition(time: Date) {
   const origin = bodyCenterInScene(VOYAGER_FRAME);
   voyager1Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
   voyager1Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager1Model.position, dish));
-  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  const scale = 10 ** modelLogScale.value;
   voyager1Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
@@ -647,7 +650,7 @@ function setVoyager2ModelPosition(time: Date) {
   const origin = bodyCenterInScene(VOYAGER_FRAME);
   voyager2Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
   voyager2Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager2Model.position, dish));
-  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  const scale = 10 ** modelLogScale.value;
   voyager2Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
@@ -1047,6 +1050,23 @@ body {
   // the current track in gold, matching the selected item in the open menu (item-color)
   .v-select__selection-text {
     color: rgb(var(--v-theme-primary));
+  }
+
+  // 16px insets line the label and "Actual" up with the dropdown's text (v-field's 16px padding)
+  .model-size-label {
+    font-size: 12px;
+    opacity: 0.8;
+    padding-inline: 16px;
+    margin-top: 1rem;
+  }
+
+  .model-size .v-slider {
+    margin-inline: 16px; // vuetify's default is 8px
+  }
+
+  .model-size-end {
+    font-size: 11px;
+    opacity: 0.8;
   }
 }
 
