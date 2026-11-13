@@ -119,20 +119,11 @@
               <div id="frame-controls">
                 <v-select
                   v-model="trackingCenter"
-                  :items="SOLAR_SYSTEM_OBJECT_ITEMS"
+                  :items="TRACK_ITEMS"
+                  item-color="primary"
                   label="Track (camera center)"
                   density="compact"
                   hide-details
-                />
-                <FollowTrajectoryButton
-                  :position-at="voyager1PositionAt"
-                  :frame="VOYAGER_FRAME"
-                  label="Follow Voyager 1"
-                />
-                <FollowTrajectoryButton
-                  :position-at="voyager2PositionAt"
-                  :frame="VOYAGER_FRAME"
-                  label="Follow Voyager 2"
                 />
                 <v-switch
                   v-model="modelRealSize"
@@ -527,15 +518,12 @@ import { distanceFromBodyKm, lightTimeSeconds } from "./horizons/lightTime";
 import voyager1Data from "@/assets/voyager_spline_knots-sun.ecsv?raw";
 import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
 
+import { useFollowTrajectory } from "./composables/useFollowTrajectory";
 import { useScaledZoom } from "./composables/useScaledZoom";
 const { ZOOM_MAX, ZOOM_MIN, zoomSliderValue, onZoomSlider, zoomIn, zoomOut } = useScaledZoom();
 
 // Voyager 1 closest approach to Saturn (the Titan flyby is earlier the same day, ~05:41 UT)
 const START_TIME = new Date("1980-11-12T23:46:00Z");
-
-// what the WWT camera tracks (the scene is drawn relative to it)
-const trackingCenter = ref<SolarSystemObjects>(SolarSystemObjects.saturn);
-watch(trackingCenter, (obj) => store.setTrackedObject(obj));
 
 // Voyager 1, one Horizons table, drawn relative to the Sun (the frame with the smallest flyby errors against WWT's planets)
 const voyager1Table = new HorizonsVectorTable(voyager1Data);
@@ -545,6 +533,28 @@ const voyager1PositionAt = voyager1Table.positionAt(VOYAGER_FRAME);
 // Voyager 2, the same way
 const voyager2Table = new HorizonsVectorTable(voyager2Data);
 const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
+
+// what the WWT camera tracks (the scene is drawn relative to it): a spacecraft, or a solar system object
+const VOYAGER_TRAJECTORIES = { voyager1: voyager1PositionAt, voyager2: voyager2PositionAt };
+type TrackTarget = SolarSystemObjects | keyof typeof VOYAGER_TRAJECTORIES;
+const TRACK_ITEMS: { title: string; value: TrackTarget }[] = [
+  { title: "Voyager 1", value: "voyager1" },
+  { title: "Voyager 2", value: "voyager2" },
+  ...SOLAR_SYSTEM_OBJECT_ITEMS,
+];
+const trackingCenter = ref<TrackTarget>(SolarSystemObjects.saturn);
+const { follow: followTrajectory } = useFollowTrajectory(VOYAGER_FRAME);
+
+// WWT can only track objects; the spacecraft are followed by moving the camera ourselves
+// (tracking an object afterwards stops that)
+function applyTrack(target: TrackTarget) {
+  if (typeof target === "string") {
+    followTrajectory(VOYAGER_TRAJECTORIES[target]);
+  } else {
+    store.setTrackedObject(target);
+  }
+}
+watch(trackingCenter, applyTrack);
 const VOYAGER_2_COLOR = "#00ffff";
 const VOYAGER_1_COLOR = "#ffff00";
 
@@ -673,7 +683,7 @@ function setUpVoyagerScene() {
   store.applySetting(["solarSystemStars", true]);
   store.applySetting(["solarSystemOrbits", true]);
   store.setClockSync(false);
-  store.setTrackedObject(trackingCenter.value);
+  applyTrack(trackingCenter.value);
   // a tour step from the url has already set its event's time (its setup runs first)
   if (!showTour.value) {
     store.setTime(START_TIME);
@@ -1033,6 +1043,11 @@ body {
   width: 260px;
   padding: 8px;
   background-color: rgba(3, 1, 37, 0.8);
+
+  // the current track in gold, matching the selected item in the open menu (item-color)
+  .v-select__selection-text {
+    color: rgb(var(--v-theme-primary));
+  }
 }
 
 #center-buttons {
