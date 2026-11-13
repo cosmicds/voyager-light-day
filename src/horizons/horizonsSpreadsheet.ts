@@ -5,12 +5,14 @@ import {
   LayerMap,
   Matrix3d,
   Vector3d,
+  WWTControl,
   type SpreadSheetLayer,
 } from "@wwtelescope/engine";
 import { CoordinatesType, MarkerScales, PlotTypes, SolarSystemObjects } from "@wwtelescope/engine-types";
 import type { engineStore } from "@wwtelescope/engine-pinia";
 import type { HorizonsVector } from "./horizons";
 import { bodyCenterInScene } from "./orbitLine";
+import { drawPointList } from "@/wwt-hacks";
 
 type EngineStore = ReturnType<typeof engineStore>;
 // the 7.41 typings give LayerMap no constructor
@@ -70,10 +72,14 @@ function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string) {
   layer.set_showFarSide(true);
   layer.set_markerScale(MarkerScales.screen);
   // normal alpha blending: the default gaussian is additive, and washes out over bright planets
-  layer.set_plotType(PlotTypes.filledCircle);
+  layer.set_plotType(PlotTypes.custom);
   layer.set_scaleFactor(25);
   layer.set_color(Color.fromHex(colorHex));
   layer.set_endTime(FAR_FUTURE);
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Triangle hacking
+  layer.prepVertexBuffer(WWTControl.singleton.renderContext, layer.get_opacity()); layer.pointList.draw = drawPointList.bind(layer.pointList);
   return layer;
 }
 
