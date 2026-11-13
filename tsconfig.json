@@ -1,0 +1,54 @@
+{
+  "include": [
+    "env.d.ts",
+    "css.d.ts",
+    "components.d.ts",
+    "vite.config.*",
+    "src/**/*",
+    "src/**/*.vue",
+    "src/**/*.json",
+    "eslint.config.*",
+  ],
+  "exclude": ["src/**/__tests__/*"],
+  "compilerOptions": {
+    "composite": true,
+
+    // Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0.
+    //"baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    // add so we don't need to use 'type' for type imports
+    "verbatimModuleSyntax": false,
+
+    "target": "es6", // ES2015
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "noUncheckedSideEffectImports": false,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6",
+      "ES2015",
+      "ES2017",
+      "ES2018.Promise" // to get Promise.finally
+    ],
+
+    "types": ["node"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+  },
+  "vueCompilerOptions": {
+    "fallthroughAttributes": true,
+    "htmlAttributes": []
+  },
+}

@@ -1,0 +1,30 @@
+/** 
+    This file constains css, like utility class, that can be used 
+    across all components.
+    It is imported into the MainComponent.vue in the style tag. 
+    We declare the classes here to avoid cluttering the MainComponent.vue
+    and so that a user can override the classes easily in MainComponent.vue
+    if they do not want to edit the universal.css file directly.
+*/
+
+
+/**
+Overrides needed for the v-navigation-drawer to respect the user's desired height
+**/
+
+/* the height of drawer is hard-coded to be 256 pixels 
+   so we will get it from the #app
+*/
+#app {
+  /** this will get overriden by cssVars in the inline styles
+  this needs to be set in px or vw, not %
+   */
+  --drawer-bottom-height: 0px;
+}
+.v-navigation-drawer--active.drawer-bottom {
+  height: var(--drawer-bottom-height) !important;
+}
+.v-main:has(+.v-navigation-drawer--active.drawer-bottom) {
+  --v-layout-bottom: var(--drawer-bottom-height) !important;
+  padding-bottom:var(--drawer-bottom-height);
+}

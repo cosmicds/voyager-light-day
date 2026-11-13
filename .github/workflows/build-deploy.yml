@@ -1,0 +1,66 @@
+name: Single Branch Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: write
+  
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: ${{ github.repository_owner == 'cosmicds' }}
+    runs-on: ubuntu-latest
+    env:
+      # variables are strings. this will be string "true" or "false"
+      IS_DEV: ${{ (github.base_ref || github.ref_name) == 'dev' }}
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      
+      - name: Use Yarn 4
+        run: |
+          corepack enable
+          yarn set version 4.12.0
+
+      - name: Yarn install
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
+        env:
+          VITE_CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
+
+      - name: Check for draft flag
+        uses: sergeysova/jq-action@v2
+        id: draft
+        with:
+          cmd: cat package.json | jq -r '.draft // false'
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        if: ${{ steps.draft.outputs.value == 'false' }}
+        with:
+          branch: gh-pages
+          folder: dist
+          clean: true
+          # `clean` deletes inside `target-folder`, so a root deploy would wipe dev/, so exclude.
+          # but when the target_folder is dev/, we want to clean it, so don't exclude anything.
+          clean-exclude: ${{ env.IS_DEV == 'true' && '' || '/dev' }}
+          # Work aimed at dev (a PR into it, or a push to it) lands in /dev;
+          # main deploys to the root.
+          target-folder: ${{ env.IS_DEV == 'true' && 'dev' || '' }}

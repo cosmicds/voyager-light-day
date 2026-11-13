@@ -1,0 +1,79 @@
+/**
+ based on Sara Soueidan (https://www.sarasoueidan.com/blog/focus-indicators/) & Erik Kroes (https://www.erikkroes.nl/blog/the-universal-focus-state/)
+*/
+.focus-visible-style() { // use a LESS mixin. LESS is more than nesting :)
+  box-shadow:
+  inset 0 0 0 2px white,
+        0 0 0 3px #0b5cb3,
+        0 0 0 5px white;
+  border-radius: 0.125rem;
+}
+
+
+:focus-visible:not(.v-overlay__content) {
+  /* I am leaving the outline in place for now. 
+    browser standards want the field to appear active when it 
+    can be interacted with with a keyboard, even with mouse navigation. 
+  */
+  // outline: none; 
+  .focus-visible-style();
+}
+
+
+/**
+ use the plain .v-selection-control__wrapper 
+ so that we can capture v-checkbox, v-radio, and v-switch
+ */
+// .v-selection-control__wrapper:has(:focus-visible) {
+.v-selection-control--focus-visible .v-selection-control__wrapper {
+  .focus-visible-style();
+}
+
+/**
+https://drafts.csswg.org/selectors-4/#indicate-focus
+browsers will apply :focus-visible to anything that gets text input or triggers a virtual keyboard
+that includes inside .v-input (vuetify disables this, but our :focus-visible style puts it back)
+*/
+.v-input input:focus-visible,
+.v-field input:focus-visible,
+.v-field textarea:focus-visible { // otp fields have no .v-input wrapper
+  // outline: none;
+  box-shadow: none;
+}
+
+/* for the keyboard focus, we want to show the focus style around the field,
+not the full wrapper or just the input */
+html[data-focus-source="keyboard"] {
+  .v-field:has(:focus-visible) {
+  // .v-field--focused { // stays active even after a list opens. 
+    .focus-visible-style();
+  }
+}
+
+
+
+html[data-focus-source="pointer"] {
+  .v-slider-thumb:focus-visible {
+    box-shadow: none;
+  }
+  // https://github.com/WICG/focus-visible/blob/main/src/focus-visible.js#L13
+  // input types the browsers will always match to :focus-visible
+  input[type="text"]:focus-visible,
+  input[type="search"]:focus-visible,
+  input[type="url"]:focus-visible,
+  input[type="tel"]:focus-visible,
+  input[type="email"]:focus-visible,
+  input[type="password"]:focus-visible,
+  input[type="number"]:focus-visible,
+  input[type="date"]:focus-visible,
+  input[type="month"]:focus-visible,
+  input[type="week"]:focus-visible,
+  input[type="time"]:focus-visible,
+  input[type="datetime"]:focus-visible,
+  input[type="datetime-local"]:focus-visible,
+  input:not([type]):focus-visible, // no type is a text input
+  textarea:focus-visible {
+    box-shadow: none;
+  }
+  
+}
