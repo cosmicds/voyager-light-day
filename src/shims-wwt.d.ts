@@ -13,6 +13,8 @@ declare module "@wwtelescope/engine" {
     set_world(value: Matrix3d): Matrix3d;
     get_view(): Matrix3d;
     get_projection(): Matrix3d;
+    /** solar system: the camera relative to viewTarget (au, x, z, y), set each frame by setupMatricesSolarSystem */
+    cameraPosition: Vector3d;
   }
 
   // this on the other hand is not exported at all, so we create the class declaration here

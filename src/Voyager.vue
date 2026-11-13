@@ -148,9 +148,14 @@
                   hide-details
                 />
                 <FollowTrajectoryButton
-                  :position-at="voyagerPositionAt"
+                  :position-at="voyager1PositionAt"
                   :frame="VOYAGER_FRAME"
-                  label="Follow Voyager"
+                  label="Follow Voyager 1"
+                />
+                <FollowTrajectoryButton
+                  :position-at="voyager2PositionAt"
+                  :frame="VOYAGER_FRAME"
+                  label="Follow Voyager 2"
                 />
                 <v-switch
                   v-model="modelRealSize"
@@ -552,7 +557,7 @@ import {
 import { createMovingMarkerLayer, skyMapReady } from "./horizons/horizonsSpreadsheet";
 import { createSaturnMoonOrbits, createSaturnMoonLayers } from "./horizons/saturnMoons";
 import { distanceFromBodyKm, lightTimeSeconds } from "./horizons/lightTime";
-import voyagerData from "@/assets/voyager_spline_knots-sun.ecsv?raw";
+import voyager1Data from "@/assets/voyager_spline_knots-sun.ecsv?raw";
 import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
 
 import { useScaledZoom } from "./composables/useScaledZoom";
@@ -566,46 +571,51 @@ const trackingCenter = ref<SolarSystemObjects>(SolarSystemObjects.saturn);
 watch(trackingCenter, (obj) => store.setTrackedObject(obj));
 
 // Voyager 1, one Horizons table, drawn relative to the Sun (the frame with the smallest flyby errors against WWT's planets)
-const voyagerTable = new HorizonsVectorTable(voyagerData);
+const voyager1Table = new HorizonsVectorTable(voyager1Data);
 const VOYAGER_FRAME = SolarSystemObjects.sun;
-const voyagerPositionAt = voyagerTable.positionAt(VOYAGER_FRAME);
+const voyager1PositionAt = voyager1Table.positionAt(VOYAGER_FRAME);
 
 // Voyager 2, the same way
 const voyager2Table = new HorizonsVectorTable(voyager2Data);
 const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
-const VOYAGER_2_COLOR = "#4fa3ff";
+const VOYAGER_2_COLOR = "#00ffff";
+const VOYAGER_1_COLOR = "#ffff00";
 
-let voyagerLine: TrajectoryLine | null = null;
+let voyager1Line: TrajectoryLine | null = null;
 let voyager2Line: TrajectoryLine | null = null;
-const voyagerLayer = shallowRef<SpreadSheetLayer | null>(null);
+const showV1 = ref(true);
+const showv2 = ref(true);
+const voyager1Layer = shallowRef<SpreadSheetLayer | null>(null);
+const voyager2Layer = shallowRef<SpreadSheetLayer | null>(null);
 const saturnMoonLayers = shallowRef<SpreadSheetLayer[]>([]);
 
 function drawVoyagerOrbit() {
   // J2000 points, rotated to the scene's ecliptic of date
   const jdtdb = tdbNow();
-  if (voyagerLine) {
-    drawTrajectoryLineInFrame(voyagerLine, VOYAGER_FRAME, jdtdb);
+  if (voyager1Line && showV1.value) {
+    drawTrajectoryLineInFrame(voyager1Line, VOYAGER_FRAME, jdtdb);
   }
-  if (voyager2Line) {
+  if (voyager2Line && showv2.value) {
     drawTrajectoryLineInFrame(voyager2Line, VOYAGER_FRAME, jdtdb);
   }
 }
 
 function createVoyagerOrbit() {
-  voyagerLine = createTrajectoryLine(voyagerTable.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU);
+  voyager1Line = createTrajectoryLine(voyager1Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU, VOYAGER_1_COLOR);
   voyager2Line = createTrajectoryLine(voyager2Table.j2000(VOYAGER_FRAME), LINE_TOLERANCE_AU, VOYAGER_2_COLOR);
   store.addFrameCallback(drawVoyagerOrbit);
 }
 
 function createVoyagerLayer() {
-  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt);
-  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, "#df1c23", voyagerPositionAt).then(
-    (layer) => (voyagerLayer.value = layer),
+  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt)
+    .then((layer) => (voyager2Layer.value = layer));
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt).then(
+    (layer) => (voyager1Layer.value = layer),
   );
 }
 
 // time sliders: the whole file, in 1 minute steps
-const voyagerSpan = voyagerTable.timeSpan;
+const voyagerSpan = voyager2Table.timeSpan; // voyager 2 is longer
 const SLIDER_STEP_MS = 60 * 1000;
 
 import * as THREE from "three";
@@ -613,7 +623,8 @@ import { useThreeModel } from "./three-helpers";
 import glbUrl from "@/assets/Voyager.glb?url";
 
 const renderThree = ref(true);
-let voyagerModel: THREE.Group | null = null;
+let voyager1Model: THREE.Group | null = null;
+let voyager2Model: THREE.Group | null = null;
 const modelRealSize = ref(false);
 const modelLogScale = ref(7);
 const METERS_PER_AU = 149597870700;
@@ -629,21 +640,38 @@ function directionTo(body: SolarSystemObjects, from: THREE.Vector3, out: THREE.V
 }
 
 /** The model on the red dot, its dish on Earth (no roll). three.js is (X, Y, Z) */
-function setVoyagerModelPosition(time: Date) {
-  if (!voyagerModel) {
+function setVoyager1ModelPosition(time: Date) {
+  if (!voyager1Model) {
     return;
   }
   const t = time.getTime();
-  const p = voyagerPositionAt(t);
-  voyagerModel.visible = p !== null;
+  const p = voyager1PositionAt(t);
+  voyager1Model.visible = p !== null;
   if (!p) {
     return;
   }
   const origin = bodyCenterInScene(VOYAGER_FRAME);
-  voyagerModel.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
-  voyagerModel.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyagerModel.position, dish));
+  voyager1Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
+  voyager1Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager1Model.position, dish));
   const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
-  voyagerModel.scale.setScalar(scale / METERS_PER_AU);
+  voyager1Model.scale.setScalar(scale / METERS_PER_AU);
+}
+
+function setVoyager2ModelPosition(time: Date) {
+  if (!voyager2Model) {
+    return;
+  }
+  const t = time.getTime();
+  const p = voyager2PositionAt(t);
+  voyager2Model.visible = p !== null;
+  if (!p) {
+    return;
+  }
+  const origin = bodyCenterInScene(VOYAGER_FRAME);
+  voyager2Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
+  voyager2Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager2Model.position, dish));
+  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  voyager2Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
 const voyagerLightTime = ref("");
@@ -657,7 +685,7 @@ function hoursMinutesSeconds(seconds: number): string {
 
 /** Voyager's distance from Earth as light time (distance ÷ c), for the display */
 function updateVoyagerLightTime() {
-  const v = voyagerPositionAt(SpaceTimeController.get_now().getTime());
+  const v = voyager1PositionAt(SpaceTimeController.get_now().getTime());
   voyagerLightTime.value = v
     ? hoursMinutesSeconds(lightTimeSeconds(distanceFromBodyKm(v, VOYAGER_FRAME, SolarSystemObjects.earth)))
     : "";
@@ -694,9 +722,11 @@ function setUpVoyagerScene() {
   });
 
   // before useThreeModel, so the model is placed before three renders in the same frame
-  store.addFrameCallback(() => setVoyagerModelPosition(SpaceTimeController.get_now()));
+  store.addFrameCallback(() => setVoyager1ModelPosition(SpaceTimeController.get_now()));
+  store.addFrameCallback(() => setVoyager2ModelPosition(SpaceTimeController.get_now()));
   store.addFrameCallback(updateVoyagerLightTime);
-  useThreeModel(store, glbUrl, renderThree, (model) => (voyagerModel = model));
+  useThreeModel(store, glbUrl, renderThree, (model) => (voyager1Model = model));
+  useThreeModel(store, glbUrl, renderThree, (model) => (voyager2Model = model));
 }
 
 // tracking //
