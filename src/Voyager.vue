@@ -5,9 +5,9 @@
     :class="[smallSize ? 'app-is-small' : '', kiosk ? 'kiosk' : '']"
   >
     <webgl-test @webgl2-disabled="showWebGL2Warning = true" />
-    
+
     <!-- This contains the splash screen content -->
-     
+
     <SplashScreen
       v-model="showSplashScreen"
       :color="accentColor"
@@ -30,7 +30,7 @@
         <!-- This block contains the elements (e.g. icon buttons displayed at/near the top of the screen) -->
 
         <div v-show="!showSplashScreen" id="wwt-overlay">
-        
+
           <div id="top-content">
             <div id="left-buttons">
               <icon-button
@@ -68,18 +68,43 @@
                 tooltip-location="start"
                 size="lg"
               />
-              <wwt-time-control
-                hide-time-input
-                hide-set-time
-                hide-status
-              />
+              <!-- zoom, as in artemis-ii: top of the slider is zoomed in -->
+              <div id="zoom-controls">
+                <button
+                  class="zoom-button"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                  @click="zoomIn"
+                >
+                  +
+                </button>
+                <input
+                  type="range"
+                  class="zoom-slider"
+                  aria-label="Zoom"
+                  title="Zoom"
+                  min="0"
+                  max="1"
+                  step="0.001"
+                  :value="zoomSliderValue"
+                  @input="onZoomSlider"
+                />
+                <button
+                  class="zoom-button"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                  @click="zoomOut"
+                >
+                  −
+                </button>
+              </div>
             </div>
             <div id="center-buttons">
               <div
                 v-if="voyagerLightTime"
                 id="light-time"
               >
-                <div class="light-time-label">Distance from Earth in light time</div>
+                <div class="light-time-label">Voyager 1 Distance from Earth in Light Travel Time</div>
                 <div class="light-time-value">{{ voyagerLightTime }}</div>
               </div>
             </div>
@@ -99,54 +124,57 @@
               <div id="frame-controls">
                 <v-select
                   v-model="trackingCenter"
-                  :items="SOLAR_SYSTEM_OBJECT_ITEMS"
+                  :items="TRACK_ITEMS"
+                  item-color="primary"
                   label="Track (camera center)"
                   density="compact"
                   hide-details
                 />
-                <FollowTrajectoryButton
-                  :position-at="voyager1PositionAt"
-                  :frame="VOYAGER_FRAME"
-                  label="Follow Voyager 1"
-                />
-                <FollowTrajectoryButton
-                  :position-at="voyager2PositionAt"
-                  :frame="VOYAGER_FRAME"
-                  label="Follow Voyager 2"
-                />
-                <v-switch
-                  v-model="modelRealSize"
-                  label="Voyager model at real size"
-                  density="compact"
-                  hide-details
-                />
-                <v-slider
-                  v-model="modelLogScale"
-                  :disabled="modelRealSize"
-                  :min="0"
-                  :max="12"
-                  :step="0.01"
-                  label="scale (log10)"
-                  thumb-label
-                  density="compact"
-                  hide-details
-                />
+                <!-- log10 of the model's magnification: 0 is actual size -->
+                <div class="model-size">
+                  <div class="model-size-label">Spacecraft size</div>
+                  <v-slider
+                    v-model="modelLogScale"
+                    :min="0"
+                    :max="12"
+                    :step="0.01"
+                    aria-label="Spacecraft size"
+                    density="compact"
+                    hide-details
+                  >
+                    <template #prepend>
+                      <span class="model-size-end">Actual</span>
+                    </template>
+                    <template #append>
+                      <span class="model-size-end">Enlarged</span>
+                    </template>
+                  </v-slider>
+                </div>
               </div>
             </div>
           </div>
 
           <div id="bottom-content">
-            <!-- the whole mission, log in time since launch -->
-            <MissionTimeSlider
-              id="mission-slider"
-              :start="voyagerSpan.start"
-              :end="voyagerSpan.end"
-              :step-ms="SLIDER_STEP_MS"
-              :log-scale-days="100"
-              @mousedown="missionSliderUses.increment()"
-            />
+            <!-- play/pause + speed to the left of the timeline; below it on small screens (see CSS) -->
+            <div id="timeline">
+              <wwt-time-control
+                hide-time-input
+                hide-set-time
+                hide-status
+                :color="accentColor"
+              />
+              <!-- the whole mission, log in time since launch -->
+              <MissionTimeSlider
+                id="mission-slider"
+                :start="voyagerSpan.start"
+                :end="voyagerSpan.end"
+                :step-ms="SLIDER_STEP_MS"
+                :log-scale-days="100"
+                @mousedown="missionSliderUses.increment()"
+              />
+            </div>
           </div>
-          
+
           <!-- credit logos $logo-credits.cds-bottom-credits -->
           <credit-logos
             v-if="!xs"
@@ -241,7 +269,7 @@
         v-model:tab is the name of the currently selected tab. It comes from the title in kebab-case or the value if specified
         Each tab must havea unique value. If the sheet is closed and you want to show a specific tab, you must set
         the showTextSheet to true and set the infoSheetTab to the value of the tab you want to show.
-        
+
         Some available options are
         hide-tabs: (default: false) hide the tab bar, but keep space for the close button
         only-show-one: (default: false) only show the active tab, hide the others
@@ -300,7 +328,7 @@
       </v-sheet>
       -->
     </v-navigation-drawer>
-    
+
     <!-- privacy setup -->
     <!-- <v-dialog
       id="data-collection-popup-dialog"
@@ -318,7 +346,7 @@
         v-model:response-opt-out="responseOptOut"
       />
     </v-dialog> -->
-    
+
     <v-dialog
       id="cds-privacy-policy"
       v-model="showPrivacyPolicyInfo"
@@ -349,8 +377,8 @@
       @opt-out="optOutRating"
       @what-is-this="showPrivacyPolicyInfo = true"
     />
-    
-    
+
+
 
     <v-slide-y-transition>
       <DataCollectionOptOutFooter
@@ -505,15 +533,12 @@ import { distanceFromBodyKm, lightTimeSeconds } from "./horizons/lightTime";
 import voyager1Data from "@/assets/voyager_spline_knots-sun.ecsv?raw";
 import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
 
+import { useFollowTrajectory } from "./composables/useFollowTrajectory";
 import { useScaledZoom } from "./composables/useScaledZoom";
-const { ZOOM_MAX, ZOOM_MIN } = useScaledZoom();
+const { ZOOM_MAX, ZOOM_MIN, zoomSliderValue, onZoomSlider, zoomIn, zoomOut } = useScaledZoom();
 
 // Voyager 1 closest approach to Saturn (the Titan flyby is earlier the same day, ~05:41 UT)
 const START_TIME = new Date("1980-11-12T23:46:00Z");
-
-// what the WWT camera tracks (the scene is drawn relative to it)
-const trackingCenter = ref<SolarSystemObjects>(SolarSystemObjects.saturn);
-watch(trackingCenter, (obj) => store.setTrackedObject(obj));
 
 // Voyager 1, one Horizons table, drawn relative to the Sun (the frame with the smallest flyby errors against WWT's planets)
 const voyager1Table = new HorizonsVectorTable(voyager1Data);
@@ -523,6 +548,28 @@ const voyager1PositionAt = voyager1Table.positionAt(VOYAGER_FRAME);
 // Voyager 2, the same way
 const voyager2Table = new HorizonsVectorTable(voyager2Data);
 const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
+
+// what the WWT camera tracks (the scene is drawn relative to it): a spacecraft, or a solar system object
+const VOYAGER_TRAJECTORIES = { voyager1: voyager1PositionAt, voyager2: voyager2PositionAt };
+type TrackTarget = SolarSystemObjects | keyof typeof VOYAGER_TRAJECTORIES;
+const TRACK_ITEMS: { title: string; value: TrackTarget }[] = [
+  { title: "Voyager 1", value: "voyager1" },
+  { title: "Voyager 2", value: "voyager2" },
+  ...SOLAR_SYSTEM_OBJECT_ITEMS,
+];
+const trackingCenter = ref<TrackTarget>("voyager1");
+const { follow: followTrajectory } = useFollowTrajectory(VOYAGER_FRAME);
+
+// WWT can only track objects; the spacecraft are followed by moving the camera ourselves
+// (tracking an object afterwards stops that)
+function applyTrack(target: TrackTarget) {
+  if (typeof target === "string") {
+    followTrajectory(VOYAGER_TRAJECTORIES[target]);
+  } else {
+    store.setTrackedObject(target);
+  }
+}
+watch(trackingCenter, applyTrack);
 const VOYAGER_2_COLOR = "#00ffff";
 const VOYAGER_1_COLOR = "#ffff00";
 
@@ -552,9 +599,9 @@ function createVoyagerOrbit() {
 }
 
 function createVoyagerLayer() {
-  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt)
+  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt, true)
     .then((layer) => (voyager2Layer.value = layer));
-  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt).then(
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt, true).then(
     (layer) => (voyager1Layer.value = layer),
   );
 }
@@ -570,7 +617,7 @@ import glbUrl from "@/assets/Voyager.glb?url";
 const renderThree = ref(true);
 let voyager1Model: THREE.Group | null = null;
 let voyager2Model: THREE.Group | null = null;
-const modelRealSize = ref(false);
+// log10 of the models' magnification (0 is actual size)
 const modelLogScale = ref(7);
 const METERS_PER_AU = 149597870700;
 
@@ -598,7 +645,7 @@ function setVoyager1ModelPosition(time: Date) {
   const origin = bodyCenterInScene(VOYAGER_FRAME);
   voyager1Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
   voyager1Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager1Model.position, dish));
-  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  const scale = 10 ** modelLogScale.value;
   voyager1Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
@@ -615,7 +662,7 @@ function setVoyager2ModelPosition(time: Date) {
   const origin = bodyCenterInScene(VOYAGER_FRAME);
   voyager2Model.position.set(p.x + origin.x, p.y + origin.z, p.z + origin.y);
   voyager2Model.quaternion.setFromUnitVectors(DISH_AXIS, directionTo(SolarSystemObjects.earth, voyager2Model.position, dish));
-  const scale = modelRealSize.value ? 1 : 10 ** modelLogScale.value;
+  const scale = 10 ** modelLogScale.value;
   voyager2Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
@@ -651,7 +698,7 @@ function setUpVoyagerScene() {
   store.applySetting(["solarSystemStars", true]);
   store.applySetting(["solarSystemOrbits", true]);
   store.setClockSync(false);
-  store.setTrackedObject(trackingCenter.value);
+  applyTrack(trackingCenter.value);
   // a tour step from the url has already set its event's time (its setup runs first)
   if (!showTour.value) {
     store.setTime(START_TIME);
@@ -739,9 +786,9 @@ const {
   optOut: optOutRating,
   updateUserExperienceInfo,
   initializePrompt,
-} = useUserExperienceRating(STORY_NAME, userID, { 
-  responseOptOut, 
-  timeout: 45_000, 
+} = useUserExperienceRating(STORY_NAME, userID, {
+  responseOptOut,
+  timeout: 45_000,
   questions: [
     "How do you like this app?",
   ],
@@ -950,7 +997,7 @@ body {
   left: 0;
   bottom: 0;
   right: 0;
-  
+
   > canvas {
     display: block;
   }
@@ -993,6 +1040,41 @@ body {
   pointer-events: auto;
 }
 
+// adapted from artemis-ii's zoom slider, in the theme gold instead of white
+#zoom-controls {
+  padding-top: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  .zoom-slider {
+    writing-mode: vertical-lr;
+    height: 120px;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .zoom-button {
+    background: #000;
+    border: 2px solid var(--accent-color);
+    border-radius: 3px;
+    color: var(--accent-color);
+    width: 20px;
+    height: 20px;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+}
+
 #right-buttons {
   display: flex;
   flex-direction: column;
@@ -1021,6 +1103,28 @@ body {
   width: 260px;
   padding: 8px;
   background-color: rgba(3, 1, 37, 0.8);
+
+  // the current track in gold, matching the selected item in the open menu (item-color)
+  .v-select__selection-text {
+    color: rgb(var(--v-theme-primary));
+  }
+
+  // 16px insets line the label and "Actual" up with the dropdown's text (v-field's 16px padding)
+  .model-size-label {
+    font-size: 12px;
+    opacity: 0.8;
+    padding-inline: 16px;
+    margin-top: 1rem;
+  }
+
+  .model-size .v-slider {
+    margin-inline: 16px; // vuetify's default is 8px
+  }
+
+  .model-size-end {
+    font-size: 11px;
+    opacity: 0.8;
+  }
 }
 
 #center-buttons {
@@ -1035,8 +1139,9 @@ body {
   background-color: rgba(3, 1, 37, 0.8);
 
   .light-time-label {
-    font-size: 12px;
+    font-size: 14px;
     opacity: 0.8;
+    margin-bottom: 0.25rem;
   }
 
   .light-time-value {
@@ -1045,11 +1150,65 @@ body {
   }
 }
 
-// leaves room for the credit logos
-#mission-slider {
+// time controls + mission slider. the bottom margin leaves room for the credit logos
+#timeline {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0 5% 2.5rem;
+  display: flex;
+  // bottom-align so the buttons line up with the track, not the track + date above it.
+  // `end`, not `flex-end`: wrap-reverse flips which edge flex-end means
+  align-items: end;
+  gap: 0.5rem;
+  // when there isn't room for both (e.g. the floating tour is open), wrap-reverse puts the
+  // controls under the slider rather than above it, matching the small-screen layout
+  flex-wrap: wrap-reverse;
+  justify-content: center;
+}
+
+#mission-slider {
+  // below ~400px the track itself gets too short to scrub
+  flex: 1 1 400px;
+  min-width: 0;
+  // the current date on its own line, centered above the track
+  flex-wrap: wrap;
+  row-gap: 0;
+
+  .mission-time-now {
+    order: -1;
+    flex-basis: 100%;
+    text-align: center;
+    padding-top: 4px;
+  }
+}
+
+// small screens: controls go under the timeline. column-reverse keeps the DOM
+// (and tab) order the same as on large screens, so tab order is controls -> slider here
+// controls keep their natural width, centered; no side margin, since at phone width the
+// controls (~330px) don't fit inside the 5% margins
+// as wide as the buttons (not the screen) and centered, with the date panel stretched to match
+.app-is-small #timeline {
+  flex-direction: column-reverse;
+  flex: 0 1 auto;
+  align-items: stretch;
+  margin-inline: auto;
+
+  #mission-slider {
+    // the 400px basis above is a width; in a column it would become the height
+    flex: 0 0 auto;
+
+    // no scrubbing on small screens: only the current date is shown, above the buttons
+    .v-slider,
+    .mission-time-end {
+      display: none;
+    }
+  }
+
+  // on phones the toolkit's SpeedControl spaces its buttons wider (~300px), so let "Now" wrap
+  .wwt-clock-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .voyager-event {
@@ -1143,7 +1302,7 @@ body {
 
 // Basic text styling for the TabbedSheet's content
 // it is better to set in the main app than to set things in the component
-// since the component may end up being imported from the toolkit. 
+// since the component may end up being imported from the toolkit.
 .cds-info-sheet .tab-page {
   h3 {
     color: steelblue;
