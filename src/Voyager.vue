@@ -63,11 +63,6 @@
                 tooltip-location="start"
                 size="lg"
               />
-              <wwt-time-control
-                hide-time-input
-                hide-set-time
-                hide-status
-              />
             </div>
             <div id="center-buttons">
               <div
@@ -130,15 +125,24 @@
                  below or floating out of it, so focus order doesn't jump around when
                  the layout switches between the two. -->
             <div id="tour-floating-location" />
-            <!-- the whole mission, log in time since launch -->
-            <MissionTimeSlider
-              id="mission-slider"
-              :start="voyagerSpan.start"
-              :end="voyagerSpan.end"
-              :step-ms="SLIDER_STEP_MS"
-              :log-scale-days="100"
-              @mousedown="missionSliderUses.increment()"
-            />
+            <!-- play/pause + speed to the left of the timeline; below it on small screens (see CSS) -->
+            <div id="timeline">
+              <wwt-time-control
+                hide-time-input
+                hide-set-time
+                hide-status
+                :color="accentColor"
+              />
+              <!-- the whole mission, log in time since launch -->
+              <MissionTimeSlider
+                id="mission-slider"
+                :start="voyagerSpan.start"
+                :end="voyagerSpan.end"
+                :step-ms="SLIDER_STEP_MS"
+                :log-scale-days="100"
+                @mousedown="missionSliderUses.increment()"
+              />
+            </div>
           </div>
           
           <!-- credit logos $logo-credits.cds-bottom-credits -->
@@ -958,11 +962,46 @@ body {
   }
 }
 
-// leaves room for the credit logos
-#mission-slider {
+// time controls + mission slider. the bottom margin leaves room for the credit logos
+#timeline {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0 5% 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  // when there isn't room for both (e.g. the floating tour is open), wrap-reverse puts the
+  // controls under the slider rather than above it, matching the small-screen layout
+  flex-wrap: wrap-reverse;
+  justify-content: center;
+}
+
+#mission-slider {
+  // below ~400px the track itself gets too short to scrub
+  flex: 1 1 400px;
+  min-width: 0;
+}
+
+// small screens: controls go under the timeline. column-reverse keeps the DOM
+// (and tab) order the same as on large screens, so tab order is controls -> slider here
+// controls keep their natural width, centered; no side margin, since at phone width the
+// controls (~330px) don't fit inside the 5% margins
+.app-is-small #timeline {
+  flex-direction: column-reverse;
+  align-items: center;
+  margin-inline: 0;
+
+  #mission-slider {
+    align-self: stretch;
+    // the 400px basis above is a width; in a column it would become the height
+    flex: 0 0 auto;
+  }
+
+  // on phones the toolkit's SpeedControl spaces its buttons wider (~300px), so let "Now" wrap
+  .wwt-clock-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .voyager-event {

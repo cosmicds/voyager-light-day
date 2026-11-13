@@ -38,12 +38,15 @@
         :default-rate="1000"
         :max-speed="100000000"
         :show-status="!hideStatus"
+        :color="color"
       />
       <v-btn
         v-if="!hideNow"
-        class="text-none"
+        class="text-none wwt-now-button"
         rounded="lg"
         density="compact"
+        variant="outlined"
+        :color="color"
         @click="store.setTime(new Date())"
       >
         Now
@@ -71,6 +74,8 @@ defineProps<{
   hideStatus?: boolean;
   /** the "Now" button */
   hideNow?: boolean;
+  /** button color (CSS color). */
+  color?: string;
 }>();
 
 // whether time is running. v-model so the parent can pause it (e.g. when scrubbing)
@@ -105,6 +110,7 @@ fieldset#wwt-time-control {
   font-family: monospace;
   gap: var(--spacing);
   background-color: rgba(3, 1, 37, 0.8);
+  border: none; // the browser's default fieldset border
 
   input.wwt-time-control-input {
     border: 2px solid rgba(255, 255, 255, 0.388);
@@ -131,9 +137,23 @@ fieldset#wwt-time-control {
   .wwt-clock-controls {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: var(--spacing);
+  }
+
+  // SpeedControl's icons come in two sizes (18px mdi "play backwards", 12px font-awesome
+  // for the rest); make them all 15px so the buttons match. !important beats the
+  // icons' inline sizes
+  .icon-wrapper > .v-icon {
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  // match the 2px borders on the icon buttons (vuetify's outlined default is thin, 1px)
+  .wwt-now-button {
+    border-width: 2px;
   }
 }
 </style>
