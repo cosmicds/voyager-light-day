@@ -133,9 +133,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cosmicds/vue-toolkit@portal:../vue-toolkit::locator=%40cosmicds%2Fvoyager%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@cosmicds/vue-toolkit@portal:../vue-toolkit::locator=%40cosmicds%2Fvoyager%40workspace%3A."
+"@cosmicds/vue-toolkit@npm:^0.8.0":
+  version: 0.8.1
+  resolution: "@cosmicds/vue-toolkit@npm:0.8.1"
   dependencies:
     "@capacitor/core": "npm:^5.7.4"
     "@capacitor/geolocation": "npm:^5.0.7"
@@ -158,8 +158,9 @@ __metadata:
     "@floating-ui/dom": "*"
     shepherd.js: "*"
     vue-shepherd: "*"
+  checksum: 10c0/16f2cf9c4353067ef138a6b60fdbb1d47daed776f7e56e00c33662ed150c5933af6aa9ca98fce8922de3ee7bfaef4856d28a75f95752c9fa17bded62d7f6281b
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@date-fns/tz@npm:^1.5.0":
   version: 1.5.0
