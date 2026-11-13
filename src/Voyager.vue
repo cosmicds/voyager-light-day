@@ -545,7 +545,7 @@ const TRACK_ITEMS: { title: string; value: TrackTarget }[] = [
   { title: "Voyager 2", value: "voyager2" },
   ...SOLAR_SYSTEM_OBJECT_ITEMS,
 ];
-const trackingCenter = ref<TrackTarget>(SolarSystemObjects.saturn);
+const trackingCenter = ref<TrackTarget>("voyager1");
 const { follow: followTrajectory } = useFollowTrajectory(VOYAGER_FRAME);
 
 // WWT can only track objects; the spacecraft are followed by moving the camera ourselves
