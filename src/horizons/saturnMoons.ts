@@ -9,13 +9,6 @@ import { densifiedRows, j2000PositionAt, precessedToTime } from "./trajectory";
 import { createOrbitLineList, drawOrbitLineInFrame, LINE_TOLERANCE_AU } from "./orbitLine";
 import { createMovingMarkerLayer } from "./horizonsSpreadsheet";
 
-// one orbit each around Saturn, centered on Voyager 1's flyby
-import mimasOrbitData from "@/assets/horizons_mimas-saturn.txt?raw";
-import enceladusOrbitData from "@/assets/horizons_enceladus-saturn.txt?raw";
-import tethysOrbitData from "@/assets/horizons_tethys-saturn.txt?raw";
-import dioneOrbitData from "@/assets/horizons_dione-saturn.txt?raw";
-import rheaOrbitData from "@/assets/horizons_rhea-saturn.txt?raw";
-import iapetusOrbitData from "@/assets/horizons_iapetus-saturn.txt?raw";
 // Titan around the Sun, like Voyager: one orbit at 6 h steps centered on the Titan flyby. Moved to WWT's Saturn
 // per row, the marker lands on Horizons' heliocentric Titan, so it meets Voyager (WWT's Saturn is ~6,000 km off)
 import titanData from "@/assets/horizons_titan-sun.txt?raw";
@@ -24,7 +17,6 @@ type EngineStore = ReturnType<typeof engineStore>;
 
 const SATURN = SolarSystemObjects.saturn;
 const TITAN_COLOR = "#ffa000";
-const MOON_COLOR = "#afd8e680";
 const DAY_MS = 86400000;
 
 interface SaturnMoon {
@@ -36,13 +28,7 @@ interface SaturnMoon {
 }
 
 const SATURN_MOONS: SaturnMoon[] = [
-  { name: "Mimas", table: new HorizonsVectorTable(mimasOrbitData), periodDays: 0.942422, color: MOON_COLOR },
-  { name: "Enceladus", table: new HorizonsVectorTable(enceladusOrbitData), periodDays: 1.370218, color: MOON_COLOR },
-  { name: "Tethys", table: new HorizonsVectorTable(tethysOrbitData), periodDays: 1.887802, color: MOON_COLOR },
-  { name: "Dione", table: new HorizonsVectorTable(dioneOrbitData), periodDays: 2.736916, color: MOON_COLOR },
-  { name: "Rhea", table: new HorizonsVectorTable(rheaOrbitData), periodDays: 4.517503, color: MOON_COLOR },
   { name: "Titan", table: new HorizonsVectorTable(titanData), periodDays: 15.945448, color: TITAN_COLOR },
-  { name: "Iapetus", table: new HorizonsVectorTable(iapetusOrbitData), periodDays: 79.331002, color: MOON_COLOR },
 ];
 
 /** shift t (ms) by whole periods so it lands in [start, start + period), and not past the table's end */
