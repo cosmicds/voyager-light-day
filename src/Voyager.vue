@@ -34,8 +34,7 @@
           <div id="top-content">
             <div id="left-buttons">
               <icon-button
-                id="learn-more-button"
-                class="sheet-toggle"
+                class="sheet-toggle learn-more-button"
                 :model-value="showTextSheet && infoSheetTab === 'information'"
                 icon="book-open"
                 aria-label="Learn More"
@@ -47,8 +46,7 @@
                 @activate="() => toggleInfoSheetTab('information')"
               />
               <icon-button
-                id="user-guide-button"
-                class="sheet-toggle"
+                class="sheet-toggle user-guide-button"
                 :model-value="showTextSheet && infoSheetTab === 'user-guide'"
                 icon="question"
                 aria-label="User guide"
@@ -60,9 +58,8 @@
                 @activate="() => toggleInfoSheetTab('user-guide')"
               />
               <icon-button
-                id="tour-button"
                 v-model="showTour"
-                class="sheet-toggle"
+                class="sheet-toggle tour-button"
                 icon="signs-post"
                 aria-label="Show Tour"
                 :color="accentColor"
@@ -862,15 +859,18 @@ mutuallyExclusive(showTour, showTextSheet, showUserGuideSheet);
 // gets wrong after a tab switch, since it only records on the first open.
 // Switching between contents leaves the drawer open, so the newly opened
 // content keeps the focus it grabs.
-const drawerOpenerId = computed(() => {
+// The buttons are found by class, not id: IconButton also copies an id onto its
+// tooltip, which duplicates it and points the button's aria-describedby at
+// itself. Its class lands on the tooltip too, hence `button.`.
+const drawerOpenerClass = computed(() => {
   if (showTour.value) return "tour-button";
   if (showTextSheet.value) return infoSheetTab.value === "user-guide" ? "user-guide-button" : "learn-more-button";
   return null;
 });
-watch(drawerOpenerId, (now, before) => {
+watch(drawerOpenerClass, (now, before) => {
   if (now === null && before) {
     // after the DOM update, so the closing content can't take focus back
-    nextTick(() => document.getElementById(before)?.focus());
+    nextTick(() => document.querySelector<HTMLElement>(`button.${before}`)?.focus());
   }
 });
 
