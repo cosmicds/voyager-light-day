@@ -32,28 +32,51 @@ export class TriangleShader {
     const gl: WebGLRenderingContextBase = renderContext.gl;
 
     const fragShaderText = `\
+      #version 300 es
       precision mediump float;
-      varying vec4 vColor;
+      in vec4 vColor;
+      out vec4 fragColor;
+
+      // Taken from https://www.shadertoy.com/view/XsXSz4
+      float dot2(in vec2 v) { return dot(v,v); }
+      float signedDistanceFromTriangle(in vec2 p, in vec2 p0, in vec2 p1, in vec2 p2) {
+        vec2 e0 = p1 - p0, e1 = p2 - p1, e2 = p0 - p2;
+        vec2 v0 = p - p0, v1 = p - p1, v2 = p - p2;
+      	float d0 = dot2(v0 - e0 * clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0));
+      	float d1 = dot2(v1 - e1 * clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0));
+        float d2 = dot2(v2 - e2 * clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0));
+
+          float s = e0.x * e2.y - e0.y * e2.x;
+          vec2 d = min(min(vec2(d0, s * (v0.x * e0.y - v0.y * e0.x)),
+                           vec2(d1, s * (v1.x * e1.y - v1.y * e1.x))),
+                           vec2(d2, s * (v2.x * e2.y - v2.y * e2.x)));
+      	return -sqrt(d.x) * sign(d.y);
+      }
+
       void main() {
         vec2 p = gl_PointCoord - vec2(0.5);
         // y runs top-down, but we want bottom-up
-        float y = 0.5 - p.y;
-        float sqrt3 = sqrt(3.0);
         float side = sqrt(2.0);
-        bool inside = y >= -sqrt3 / 3.0 &&
-                      y <= sqrt3 * (p.x + side / 3.0) &&
-                      y <= sqrt3 * (side / 3.0 - p.x);
-        float opacity = inside ? vColor.a : 0.0;
-        gl_FragColor = vec4(vColor.rgb, opacity);
+        float sqrt3 = sqrt(3.0);
+        float distance = signedDistanceFromTriangle(
+          vec2(p.x, 0.5 - p.y),
+          vec2(0.0, side * sqrt3 / 3.0),
+          vec2(-0.5 * side, -side * sqrt3 / 6.0),
+          vec2(0.5 * side, -side * sqrt3 / 6.0)
+        );
+        float fw = fwidth(distance);
+        float alpha = vColor.a * (1.0 - smoothstep(-fw * 0.5, fw * 0.5, distance));
+        fragColor = vec4(vColor.rgb, alpha);
       }
     `;
 
     const vertShaderText = `\
-      attribute vec3 aVertexPosition;
-      attribute vec4 aVertexColor;
-      attribute vec2 aTime;
-      attribute float aPointSize;
-      attribute float aShow;
+      #version 300 es
+      in vec3 aVertexPosition;
+      in vec4 aVertexColor;
+      in vec2 aTime;
+      in float aPointSize;
+      in float aShow;
       uniform mat4 uMVMatrix;
       uniform mat4 uPMatrix;
       uniform float jNow;
@@ -64,7 +87,7 @@ export class TriangleShader {
       uniform float sky;
       uniform float showFarSide;
 
-      varying lowp vec4 vColor;
+      out lowp vec4 vColor;
 
       void main(void)
       {

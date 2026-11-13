@@ -73,7 +73,7 @@ function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string, useTriangle
   layer.set_markerScale(MarkerScales.screen);
   // normal alpha blending: the default gaussian is additive, and washes out over bright planets
   layer.set_plotType(useTriangle ? PlotTypes.gaussian : PlotTypes.filledCircle);
-  layer.set_scaleFactor(useTriangle ? 33 : 25);
+  layer.set_scaleFactor(useTriangle ? 50 : 25);
   layer.set_color(Color.fromHex(colorHex));
   layer.set_endTime(FAR_FUTURE);
 
