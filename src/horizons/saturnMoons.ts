@@ -1,4 +1,4 @@
-import type { SpreadSheetLayer } from "@wwtelescope/engine";
+import { WWTControl, type SpreadSheetLayer } from "@wwtelescope/engine";
 import { SolarSystemObjects } from "@wwtelescope/engine-types";
 import type { engineStore } from "@wwtelescope/engine-pinia";
 import type { HorizonsVector } from "./horizons";
@@ -6,7 +6,7 @@ import { HorizonsVectorTable } from "./HorizonsVectorTable";
 import { tdbNow } from "./horizons_helpers";
 import { precessionMatrix } from "./precession";
 import { densifiedRows, j2000PositionAt, precessedToTime } from "./trajectory";
-import { createOrbitLineList, drawOrbitLineInFrame, LINE_TOLERANCE_AU } from "./orbitLine";
+import { bodyCenterInScene, createOrbitLineList, drawOrbitLineInFrame, LINE_TOLERANCE_AU } from "./orbitLine";
 import { createMovingMarkerLayer } from "./horizonsSpreadsheet";
 
 // Titan around the Sun, like Voyager: one orbit at 6 h steps centered on the Titan flyby. Moved to WWT's Saturn
@@ -49,12 +49,24 @@ function moonPositionAt(table: HorizonsVectorTable, periodDays: number) {
   };
 }
 
+/** the camera's distance (au) from a body this frame */
+function distanceFromCamera(body: SolarSystemObjects): number {
+  const b = bodyCenterInScene(body);
+  const c = WWTControl.singleton.renderContext.cameraPosition;
+  return Math.hypot(b.x - c.x, b.y - c.y, b.z - c.z);
+}
+
+const nearSaturn = () => distanceFromCamera(SATURN) < 2; // 2au works
+
 /** Orbit lines for Saturn's major moons (their 1980 orbits), drawn around Saturn every frame */
 export function createSaturnMoonOrbits(store: EngineStore) {
   const lineLists = SATURN_MOONS.map((moon) =>
     createOrbitLineList(densifiedRows(moon.table.j2000(SATURN), LINE_TOLERANCE_AU), moon.color),
   );
   const drawSaturnMoonOrbits = () => {
+    if (!nearSaturn()) {
+      return;
+    }
     const rotation = precessionMatrix(tdbNow());
     lineLists.forEach((lineList) => drawOrbitLineInFrame(lineList, SATURN, rotation));
   };
@@ -65,8 +77,12 @@ export function createSaturnMoonOrbits(store: EngineStore) {
 /** Markers for Saturn's major moons that keep going around (each table wraps by the moon's period) */
 export function createSaturnMoonLayers(store: EngineStore): Promise<SpreadSheetLayer[]> {
   return Promise.all(
-    SATURN_MOONS.map((moon) =>
-      createMovingMarkerLayer(store, moon.name, SATURN, moon.color, moonPositionAt(moon.table, moon.periodDays)),
-    ),
+    SATURN_MOONS.map((moon) => {
+      const positionAt = moonPositionAt(moon.table, moon.periodDays);
+      // null hides the marker
+      return createMovingMarkerLayer(store, moon.name, SATURN, moon.color, (t) => (nearSaturn() ? positionAt(t) : null));
+    }),
   );
 }
+
+
