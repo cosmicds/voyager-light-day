@@ -182,10 +182,12 @@
         v-if="showTour"
         v-focus-grab="showTour"
         tabindex="-1"
-        :tour="tour"
+        :tour="tourSheetTour"
         :small-size="false"
         :accent-color="accentColor"
         :border-color="borderColor"
+        show-next-on-last-step
+        :next-text="onLastStep ? 'Close' : 'Next'"
       >
         <template #default="{ step }">
           <div class="selected-info-tour voyager-event">
@@ -777,6 +779,23 @@ const tour = useTour<TourStepContent>({
 });
 urlState.track("tour", tour.stepID);
 
+// On the last step the Next button becomes Close. TourSheet's Next calls
+// tour.next(), which in the toolkit is an unbounded stepIndex += 1, so the sheet
+// gets a copy of the tour whose next() closes it there instead of stepping past
+// the end. Same refs, so the step stays in sync with `tour`.
+const onLastStep = computed(() => tour.stepIndex.value === tour.length - 1);
+const tourSheetTour = {
+  ...tour,
+  next: async () => {
+    if (onLastStep.value) {
+      tourFinished = true;
+      showTour.value = false;
+    } else {
+      await tour.next();
+    }
+  },
+};
+
 // the step's slider: its event's window (it holds no other event), within the data
 const stepWindow = computed(() => {
   const { start, end } = eventWindow(VOYAGER_1_EVENTS, tour.stepIndex.value);
@@ -786,9 +805,16 @@ const stepWindow = computed(() => {
   };
 });
 
+// Set by the last step's Close, so the next Show Tour starts over at the first
+// step. The X keeps resuming where you left off. Not reset at close time,
+// since changing the step runs its setup and would move the clock and camera
+// back to launch as the tour closes.
+let tourFinished = false;
+
 function startTour() {
   showTour.value = true;
-  tour.goToStep(tour.stepIndex.value, true);
+  tour.goToStep(tourFinished ? 0 : tour.stepIndex.value, true);
+  tourFinished = false;
 }
 
 if (urlState.loadedFromUrl.value.includes("tour")) {
