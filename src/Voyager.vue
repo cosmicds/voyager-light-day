@@ -63,6 +63,36 @@
                 tooltip-location="start"
                 size="lg"
               />
+              <!-- zoom, as in artemis-ii: top of the slider is zoomed in -->
+              <div id="zoom-controls">
+                <button
+                  class="zoom-button"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                  @click="zoomIn"
+                >
+                  +
+                </button>
+                <input
+                  type="range"
+                  class="zoom-slider"
+                  aria-label="Zoom"
+                  title="Zoom"
+                  min="0"
+                  max="1"
+                  step="0.001"
+                  :value="zoomSliderValue"
+                  @input="onZoomSlider"
+                />
+                <button
+                  class="zoom-button"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                  @click="zoomOut"
+                >
+                  −
+                </button>
+              </div>
             </div>
             <div id="center-buttons">
               <div
@@ -493,7 +523,7 @@ import voyagerData from "@/assets/voyager_spline_knots-sun.ecsv?raw";
 import voyager2Data from "@/assets/voyager2_spline_knots-sun.ecsv?raw";
 
 import { useScaledZoom } from "./composables/useScaledZoom";
-const { ZOOM_MAX, ZOOM_MIN } = useScaledZoom();
+const { ZOOM_MAX, ZOOM_MIN, zoomSliderValue, onZoomSlider, zoomIn, zoomOut } = useScaledZoom();
 
 // Voyager 1 closest approach to Saturn (the Titan flyby is earlier the same day, ~05:41 UT)
 const START_TIME = new Date("1980-11-12T23:46:00Z");
@@ -908,6 +938,41 @@ body {
   flex-direction: column;
   gap: 10px;
   pointer-events: auto;
+}
+
+// adapted from artemis-ii's zoom slider, in the theme gold instead of white
+#zoom-controls {
+  padding-top: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  .zoom-slider {
+    writing-mode: vertical-lr;
+    height: 120px;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .zoom-button {
+    background: #000;
+    border: 2px solid var(--accent-color);
+    border-radius: 3px;
+    color: var(--accent-color);
+    width: 20px;
+    height: 20px;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
 }
 
 #right-buttons {
