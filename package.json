@@ -56,8 +56,7 @@
   },
   "packageManager": "yarn@4.12.0",
   "resolutions": {
-    "pinia": "^2.3.1",
-    "@cosmicds/vue-toolkit": "portal:../vue-toolkit"
+    "pinia": "^2.3.1"
   },
   "name": "@cosmicds/voyager"
 }
