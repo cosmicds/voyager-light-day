@@ -598,8 +598,8 @@ function createVoyagerOrbit() {
 }
 
 function createVoyagerLayer() {
-  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt);
-  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, "#df1c23", voyagerPositionAt).then(
+  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt, true);
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, "#df1c23", voyagerPositionAt, true).then(
     (layer) => (voyagerLayer.value = layer),
   );
 }

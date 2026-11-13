@@ -35,8 +35,8 @@ export class TriangleShader {
       precision mediump float;
       varying vec4 vColor;
       void main() {
-        // y runs top-down, but we want bottom-up
         vec2 p = gl_PointCoord - vec2(0.5);
+        // y runs top-down, but we want bottom-up
         float y = 0.5 - p.y;
         float sqrt3 = sqrt(3.0);
         float side = sqrt(2.0);
