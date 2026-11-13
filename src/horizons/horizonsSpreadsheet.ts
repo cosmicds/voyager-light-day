@@ -72,8 +72,8 @@ function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string) {
   layer.set_showFarSide(true);
   layer.set_markerScale(MarkerScales.screen);
   // normal alpha blending: the default gaussian is additive, and washes out over bright planets
-  layer.set_plotType(PlotTypes.custom);
-  layer.set_scaleFactor(25);
+  layer.set_plotType(PlotTypes.gaussian);
+  layer.set_scaleFactor(33);
   layer.set_color(Color.fromHex(colorHex));
   layer.set_endTime(FAR_FUTURE);
 

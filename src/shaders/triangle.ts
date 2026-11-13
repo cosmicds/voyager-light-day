@@ -2,6 +2,8 @@
 // @ts-nocheck
 
 import { CameraParameters, Color, Matrix3d, RenderContext } from "@wwtelescope/engine";
+import { createVertexShader, createFragmentShader, createProgram, displayShaderCompileError, displayProgramLinkError } from "./webgl_utils";
+import { WEBGL } from "./webgl_constants";
 
 export class TriangleShader {
   static initialized = false;
@@ -33,9 +35,14 @@ export class TriangleShader {
       precision mediump float;
       varying vec4 vColor;
       void main() {
-        bool inside = gl_PointCoord.y >= 0.0 &&
-                      gl_PointCoord.y <= 2.0 * gl_PointCoord.x &&
-                      gl_PointCoord.y <= 2.0 * (1.0 - gl_PointCoord.x);
+        // y runs top-down, but we want bottom-up
+        vec2 p = gl_PointCoord - vec2(0.5);
+        float y = 0.5 - p.y;
+        float sqrt3 = sqrt(3.0);
+        float side = sqrt(2.0);
+        bool inside = y >= -sqrt3 / 3.0 &&
+                      y <= sqrt3 * (p.x + side / 3.0) &&
+                      y <= sqrt3 * (side / 3.0 - p.x);
         float opacity = inside ? vColor.a : 0.0;
         gl_FragColor = vec4(vColor.rgb, opacity);
       }
