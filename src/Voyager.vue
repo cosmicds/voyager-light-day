@@ -968,7 +968,9 @@ body {
   min-width: 0;
   margin: 0 5% 2.5rem;
   display: flex;
-  align-items: center;
+  // bottom-align so the buttons line up with the track, not the track + date above it.
+  // `end`, not `flex-end`: wrap-reverse flips which edge flex-end means
+  align-items: end;
   gap: 0.5rem;
   // when there isn't room for both (e.g. the floating tour is open), wrap-reverse puts the
   // controls under the slider rather than above it, matching the small-screen layout
@@ -980,21 +982,38 @@ body {
   // below ~400px the track itself gets too short to scrub
   flex: 1 1 400px;
   min-width: 0;
+  // the current date on its own line, centered above the track
+  flex-wrap: wrap;
+  row-gap: 0;
+
+  .mission-time-now {
+    order: -1;
+    flex-basis: 100%;
+    text-align: center;
+    padding-top: 4px;
+  }
 }
 
 // small screens: controls go under the timeline. column-reverse keeps the DOM
 // (and tab) order the same as on large screens, so tab order is controls -> slider here
 // controls keep their natural width, centered; no side margin, since at phone width the
 // controls (~330px) don't fit inside the 5% margins
+// as wide as the buttons (not the screen) and centered, with the date panel stretched to match
 .app-is-small #timeline {
   flex-direction: column-reverse;
-  align-items: center;
-  margin-inline: 0;
+  flex: 0 1 auto;
+  align-items: stretch;
+  margin-inline: auto;
 
   #mission-slider {
-    align-self: stretch;
     // the 400px basis above is a width; in a column it would become the height
     flex: 0 0 auto;
+
+    // no scrubbing on small screens: only the current date is shown, above the buttons
+    .v-slider,
+    .mission-time-end {
+      display: none;
+    }
   }
 
   // on phones the toolkit's SpeedControl spaces its buttons wider (~300px), so let "Now" wrap
