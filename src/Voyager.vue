@@ -5,9 +5,9 @@
     :class="[smallSize ? 'app-is-small' : '', kiosk ? 'kiosk' : '']"
   >
     <webgl-test @webgl2-disabled="showWebGL2Warning = true" />
-    
+
     <!-- This contains the splash screen content -->
-     
+
     <SplashScreen
       v-model="showSplashScreen"
       :color="accentColor"
@@ -30,7 +30,7 @@
         <!-- This block contains the elements (e.g. icon buttons displayed at/near the top of the screen) -->
 
         <div v-show="!showSplashScreen" id="wwt-overlay">
-        
+
           <div id="top-content">
             <div id="left-buttons">
               <icon-button
@@ -173,7 +173,7 @@
               />
             </div>
           </div>
-          
+
           <!-- credit logos $logo-credits.cds-bottom-credits -->
           <credit-logos
             v-if="!xs"
@@ -211,15 +211,15 @@
       :temporary="false"
     >
       <!-- disable=true for non-floating tour -->
-      <!-- 
+      <!--
       Teleporting to the "body" places it last in the DOM so last in the tab-focus order.
-      we actually want it pretty early, so instead of hacking a focus control, let's just put it where it belongs. 
+      we actually want it pretty early, so instead of hacking a focus control, let's just put it where it belongs.
       This won't help the case where we are in the v-navigation-drawer though
       -->
-      <Teleport 
-        to="#tour-floating-location" 
+      <Teleport
+        to="#tour-floating-location"
         defer
-        :disabled="!floatingTour" 
+        :disabled="!floatingTour"
       >
         <TourSheet
           v-if="showTour"
@@ -262,7 +262,7 @@
         v-model:tab is the name of the currently selected tab. It comes from the title in kebab-case or the value if specified
         Each tab must havea unique value. If the sheet is closed and you want to show a specific tab, you must set
         the showTextSheet to true and set the infoSheetTab to the value of the tab you want to show.
-        
+
         Some available options are
         hide-tabs: (default: false) hide the tab bar, but keep space for the close button
         only-show-one: (default: false) only show the active tab, hide the others
@@ -321,7 +321,7 @@
       </v-sheet>
       -->
     </v-navigation-drawer>
-    
+
     <!-- privacy setup -->
     <!-- <v-dialog
       id="data-collection-popup-dialog"
@@ -339,7 +339,7 @@
         v-model:response-opt-out="responseOptOut"
       />
     </v-dialog> -->
-    
+
     <v-dialog
       id="cds-privacy-policy"
       v-model="showPrivacyPolicyInfo"
@@ -370,8 +370,8 @@
       @opt-out="optOutRating"
       @what-is-this="showPrivacyPolicyInfo = true"
     />
-    
-    
+
+
 
     <v-slide-y-transition>
       <DataCollectionOptOutFooter
@@ -587,9 +587,9 @@ function createVoyagerOrbit() {
 }
 
 function createVoyagerLayer() {
-  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt)
+  createMovingMarkerLayer(store, "Voyager 2", VOYAGER_FRAME, VOYAGER_2_COLOR, voyager2PositionAt, true)
     .then((layer) => (voyager2Layer.value = layer));
-  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt).then(
+  createMovingMarkerLayer(store, "Voyager 1", VOYAGER_FRAME, VOYAGER_1_COLOR, voyager1PositionAt, true).then(
     (layer) => (voyager1Layer.value = layer),
   );
 }
@@ -774,9 +774,9 @@ const {
   optOut: optOutRating,
   updateUserExperienceInfo,
   initializePrompt,
-} = useUserExperienceRating(STORY_NAME, userID, { 
-  responseOptOut, 
-  timeout: 45_000, 
+} = useUserExperienceRating(STORY_NAME, userID, {
+  responseOptOut,
+  timeout: 45_000,
   questions: [
     "How do you like this app?",
   ],
@@ -940,7 +940,7 @@ body {
   left: 0;
   bottom: 0;
   right: 0;
-  
+
   > canvas {
     display: block;
   }
@@ -1223,7 +1223,7 @@ body {
 
 // Basic text styling for the TabbedSheet's content
 // it is better to set in the main app than to set things in the component
-// since the component may end up being imported from the toolkit. 
+// since the component may end up being imported from the toolkit.
 .cds-info-sheet .tab-page {
   h3 {
     color: steelblue;

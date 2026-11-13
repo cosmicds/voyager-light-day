@@ -5,12 +5,14 @@ import {
   LayerMap,
   Matrix3d,
   Vector3d,
+  WWTControl,
   type SpreadSheetLayer,
 } from "@wwtelescope/engine";
 import { CoordinatesType, MarkerScales, PlotTypes, SolarSystemObjects } from "@wwtelescope/engine-types";
 import type { engineStore } from "@wwtelescope/engine-pinia";
 import type { HorizonsVector } from "./horizons";
 import { bodyCenterInScene } from "./orbitLine";
+import { drawPointList } from "@/wwt-hacks";
 
 type EngineStore = ReturnType<typeof engineStore>;
 // the 7.41 typings give LayerMap no constructor
@@ -61,7 +63,7 @@ export function horizonsReferenceFrame(body: SolarSystemObjects): string {
 }
 
 /** one screen-sized dot at its frame's origin */
-function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string) {
+function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string, useTriangle=false) {
   layer.set_xAxisColumn(0);
   layer.set_yAxisColumn(1);
   layer.set_zAxisColumn(2);
@@ -70,10 +72,16 @@ function setupMarkerLayer(layer: SpreadSheetLayer, colorHex: string) {
   layer.set_showFarSide(true);
   layer.set_markerScale(MarkerScales.screen);
   // normal alpha blending: the default gaussian is additive, and washes out over bright planets
-  layer.set_plotType(PlotTypes.filledCircle);
-  layer.set_scaleFactor(25);
+  layer.set_plotType(useTriangle ? PlotTypes.gaussian : PlotTypes.filledCircle);
+  layer.set_scaleFactor(useTriangle ? 50 : 25);
   layer.set_color(Color.fromHex(colorHex));
   layer.set_endTime(FAR_FUTURE);
+
+  if (useTriangle) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore Triangle hacking
+    layer.prepVertexBuffer(WWTControl.singleton.renderContext, layer.get_opacity()); layer.pointList.draw = drawPointList.bind(layer.pointList);
+  }
   return layer;
 }
 
@@ -89,6 +97,7 @@ export function createMovingMarkerLayer(
   frame: SolarSystemObjects,
   colorHex: string,
   positionAt: (t: number) => HorizonsVector | null,
+  useTriangle=false,
 ): Promise<SpreadSheetLayer> {
   let shown = positionAt(SpaceTimeController.get_now().getTime()) !== null;
   let layer: SpreadSheetLayer | null = null;
@@ -107,5 +116,5 @@ export function createMovingMarkerLayer(
   const dataCsv = shown ? "x,y,z\r\n0,0,0" : "x,y,z";
   return store
     .createTableLayer({ name, referenceFrame: markerFrame, dataCsv })
-    .then((created) => (layer = setupMarkerLayer(created, colorHex)));
+    .then((created) => (layer = setupMarkerLayer(created, colorHex, useTriangle)));
 }
