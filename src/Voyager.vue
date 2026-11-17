@@ -769,6 +769,7 @@ import * as THREE from "three";
 import { useThreeModel } from "./three-helpers";
 import glbUrl from "@/assets/Voyager.glb?url";
 import helioGlb from "@/assets/merav.glb?url";
+import { Coordinates } from "@wwtelescope/engine";
 
 const renderThree = ref(true);
 let voyager1Model: THREE.Group | null = null;
@@ -917,6 +918,33 @@ function setVoyager2ModelPosition(time: Date) {
   voyager2Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
+// The heliosphere glb (merav.glb) is a point cloud of the heliopause in heliocentric Galactic coordinates, in au:
+// +x toward the Galactic center (l 0°, b 0°), +y toward l 90° (Galactic rotation), +z toward the north Galactic pole
+// the obliquity of the J2000 ecliptic (IAU 1976, 84381.448″), as in Horizons' "Ecliptic of J2000.0"
+const J2000_OBLIQUITY_DEG = 23.4392911;
+
+/**
+ * A Galactic direction in the ecliptic of J2000 (three.js X, Y, Z), like the Horizons rows. Uses WWT's
+ * Coordinates.galactictoJ2000 (the Hipparcos–Gaia matrix), not AstroCalc.galacticToJ2000 (Meeus's B1950 formula)
+ */
+function galacticToEclipticJ2000(lDeg: number, bDeg: number): THREE.Vector3 {
+  const [ra, dec] = Coordinates.galactictoJ2000(lDeg, bDeg).map(THREE.MathUtils.degToRad);
+  const eps = THREE.MathUtils.degToRad(J2000_OBLIQUITY_DEG);
+  const [x, y, z] = [Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec)];
+  return new THREE.Vector3(x, Math.cos(eps) * y + Math.sin(eps) * z, -Math.sin(eps) * y + Math.cos(eps) * z);
+}
+
+
+const GALACTIC_TO_ECLIPTIC = new THREE.Quaternion().setFromRotationMatrix(
+  new THREE.Matrix4().makeBasis(
+    galacticToEclipticJ2000(0, 0),
+    galacticToEclipticJ2000(90, 0),
+    galacticToEclipticJ2000(0, 90),
+  ),
+);
+
+const HELIOSPHERE_SCALE = 0.84;
+
 /** The heliosphere model on the Sun. The three.js scene is relative to the view target, so this follows tracking */
 function setHeliosphereModelPosition() {
   if (!heliosphereModel) {
@@ -1059,7 +1087,8 @@ function setUpVoyagerScene() {
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager1Model = model));
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager2Model = model));
   useThreeModel(store, helioGlb, renderThree, (model) => {
-    model.scale.setScalar(1);
+    model.scale.setScalar(HELIOSPHERE_SCALE);
+    model.quaternion.copy(GALACTIC_TO_ECLIPTIC);
     heliosphereModel = model;
   });
 }
