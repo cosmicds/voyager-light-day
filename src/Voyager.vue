@@ -225,7 +225,7 @@
                 size="1x"
               />
               <div
-                v-if="showControls && !showTour"
+                v-if="showControls && (!showTour || !xs)"
                 id="frame-controls"
               >
                 <v-select
