@@ -236,6 +236,18 @@
                     density="compact"
                     hide-details
                   />
+                  <v-checkbox
+                    v-model="showHeliosphere"
+                    label="Show heliosphere"
+                    density="compact"
+                    hide-details
+                  />
+                  <v-checkbox
+                    v-model="showLightDaySphere"
+                    label="Show one light-day sphere"
+                    density="compact"
+                    hide-details
+                  />
                 </div>
                 <!-- <div class="playback-rate-input">
                   <v-text-field
