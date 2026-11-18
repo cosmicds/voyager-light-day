@@ -782,6 +782,7 @@ const METERS_PER_AU = 149597870700;
 const MODEL_REAL_SIZE_METERS = 13;
 const showVoyagerModels = ref(true);
 const showVoyagerLabels = ref(true);
+const showHeliosphere = ref(true);
 
 function setMaximumZoomForView(tc: TrackTarget, scale: number) {
   if (tc === "voyager1" || tc === "voyager2") {
@@ -950,9 +951,35 @@ function setHeliosphereModelPosition() {
   if (!heliosphereModel) {
     return;
   }
+  heliosphereModel.visible = showHeliosphere.value;
   const sun = bodyCenterInScene(SolarSystemObjects.sun);
   heliosphereModel.position.set(sun.x, sun.z, sun.y);
 }
+
+// one light-day (the distance light travels in a day) around Earth, as a faint wireframe
+const showLightDaySphere = ref(true);
+const LIGHT_DAY_AU = (86400 * 299792.458) / 149597870.7; // ≈ 173.1 au
+const geometry = new THREE.SphereGeometry(LIGHT_DAY_AU, 256, 128);
+const material = new THREE.MeshBasicMaterial({
+  color: VOYAGER_1_COLOR,
+  wireframe: false,
+  transparent: true,
+  opacity: 0.06,
+  depthWrite: false,
+  side: THREE.DoubleSide, 
+});
+const lightDaySphere = new THREE.Mesh(
+  geometry,
+  material,
+);
+
+/** The light-day sphere on Earth. The three.js scene is relative to the view target, so this follows tracking */
+function setLightDaySpherePosition() {
+  lightDaySphere.visible = showLightDaySphere.value;
+  const earth = bodyCenterInScene(SolarSystemObjects.earth);
+  lightDaySphere.position.set(earth.x, earth.z, earth.y);
+}
+
 
 // The top label (distance, date, and was/is/will be) follows the clock at most every LABEL_THROTTLE_MS,
 // so fast playback doesn't flicker its digits. Trailing, so it ends on the time the clock stops at
@@ -1079,6 +1106,7 @@ function setUpVoyagerScene() {
     setVoyager1ModelPosition(now);
     setVoyager2ModelPosition(now);
     setHeliosphereModelPosition();
+    setLightDaySpherePosition();
     voyager1Location.value = voyager1PositionAt(time);
     voyager2Location.value = voyager2PositionAt(time);
     loopAtEnd();
@@ -1086,11 +1114,12 @@ function setUpVoyagerScene() {
   });
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager1Model = model));
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager2Model = model));
-  useThreeModel(store, helioGlb, renderThree, (model) => {
+  const { scene } = useThreeModel(store, helioGlb, renderThree, (model) => {
     model.scale.setScalar(HELIOSPHERE_SCALE);
     model.quaternion.copy(GALACTIC_TO_ECLIPTIC);
     heliosphereModel = model;
   });
+  scene.add(lightDaySphere);
 }
 
 // tracking //
