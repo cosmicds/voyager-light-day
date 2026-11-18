@@ -1,6 +1,7 @@
 import { type Ref } from "vue";
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { WWTControl } from "@wwtelescope/engine";
 import type { engineStore } from "@wwtelescope/engine-pinia";
 
@@ -54,7 +55,9 @@ export function useThreeModel(
     renderer.resetState();
   });
 
-  new GLTFLoader().load(
+  const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
+  loader.load(
     glbUrl,
     (gltf: GLTF) => {
       scene.add(gltf.scene);

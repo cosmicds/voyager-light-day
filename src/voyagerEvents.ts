@@ -42,6 +42,10 @@ export interface MissionEvent {
   rate?: number;
   /** hide the tour step's time slider at this stop */
   noSlider?: boolean;
+  /** show the heliosphere model at this tour step (hidden on every other step) */
+  showHeliosphere?: boolean;
+  /** show the one light-day sphere at this tour step (hidden on every other step) */
+  showLightDaySphere?: boolean;
 }
 
 export interface TimeRange {
@@ -428,11 +432,11 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
   {
     title: "Interstellar space",
     noSlider: true,
+    showHeliosphere: true,
     windowDays: 365,
-    caption: `This artist's concept depicts NASA's Voyager 1 spacecraft entering
-      interstellar space. Interstellar space is dominated by the plasma, or
-      ionized gas, that was ejected by the death of nearby giant stars
-      millions of years ago.`,
+    caption: `On August 25, 2012, Voyager 1 crossed into interstellar space. 
+    The yellow model shown is from a simulation by astronomer Merav Opher and her team. It shows where we believe the boundary between our solar system and interstellar space is located. 
+    In this model, the boundary is where gas transitions from the hot solar wind (from the Sun) to the cold gas of interstellar space.`,
     date: new Date("2012-08-25T00:00:00Z"),
     image: interstellar,
     imageUrl: "https://science.nasa.gov/photojournal/voyager-1-entering-interstellar-space-artist-concept/",
@@ -445,7 +449,7 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
       track: 0,
       lat: 32.36864062499995,
       lng: 80.90261612548761,
-      zoom: 724.5852368350302,
+      zoom: 1085.0,
       rotation: 0,
       angle: 0,
       modelLogScale: 5.64,
@@ -455,16 +459,26 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
   {
     title: "One light-day from Earth",
     noSlider: true,
-    caption: `Voyager 1 has entered interstellar space. NASA's spacecraft, which
+    showHeliosphere: true,
+    showLightDaySphere: true,
+    caption: [`Voyager 1 has entered interstellar space. NASA's spacecraft, which
       rose from Earth on a September morning nearly 50 years ago, has traveled farther
-      than anyone, or anything, in history.`,
+      than anyone, or anything, in history.`, `In translucent blue is the a 1 light-day sphere centered on the Earth.`],
     date: ONE_LIGHT_DAY,
     image: lightDay,
     imageUrl: "https://science.nasa.gov/photojournal/voyager-goes-interstellar-artist-concept/",
     credit: "NASA/JPL-Caltech",
     imageTaken: "artist's concept, 2013",
     track: SolarSystemObjects.sun,
-    view: ONE_LIGHT_DAY_VIEW,
+    view: {
+      ...ONE_LIGHT_DAY_VIEW, 
+      track: 0,
+      lat: 32.36864062499995,
+      lng: 80.90261612548761,
+      rotation: 0,
+      angle: 0,
+      zoom: 1550.1
+    },
     rate: 1000000,
   },
 ];

@@ -75,6 +75,22 @@
             <strong>Voyager 2</strong>
           </p>
         </wwt-tracked-content>
+
+        <!-- the light-day sphere, labelled where Voyager 1 crosses it -->
+        <!-- <wwt-tracked-content
+          :store="store"
+          :position="lightDayLocation"
+          :offset-x="-130"
+          :offset-y="-50"
+        >
+          <p
+            v-show="showLightDaySphere"
+            class="voyager-label"
+            :style="`color: ${VOYAGER_1_COLOR}`"
+          >
+            <strong>One light-day</strong>
+          </p>
+        </wwt-tracked-content> -->
         <wwt-loader v-model="isLoading" />
 
         <!-- This block contains the elements (e.g. icon buttons displayed at/near the top of the screen) -->
@@ -151,6 +167,23 @@
                   </svg>
                 </button>
               </div>
+              <div
+                v-if="showHeliosphere || showLightDaySphere"
+                class="model-legend"
+              >
+                <!-- just legend for heliosphere and light day sphere
+                use 3dots for the thelio, and colored patch for the light dat -->
+                <div class="legend-item helio-legend" :class="{'not-shown': !showHeliosphere}">
+                  <div class="legend-preview">
+                    ···
+                  </div>
+                  <div class="legend-label">Heliosphere</div>
+                </div>
+                <div class="legend-item ld-legend" :class="{'not-shown': !showLightDaySphere}">
+                  <div class="legend-preview"></div>
+                  <div class="legend-label">One Light Day</div>
+                </div>
+              </div>
             </div>
             <div id="center-buttons">
               <div
@@ -192,7 +225,7 @@
                 size="1x"
               />
               <div
-                v-if="showControls"
+                v-if="showControls && !showTour"
                 id="frame-controls"
               >
                 <v-select
@@ -233,6 +266,18 @@
                   <v-checkbox
                     v-model="showVoyagerLabels"
                     label="Show Voyager labels"
+                    density="compact"
+                    hide-details
+                  />
+                  <v-checkbox
+                    v-model="showHeliosphere"
+                    label="Show heliosphere"
+                    density="compact"
+                    hide-details
+                  />
+                  <v-checkbox
+                    v-model="showLightDaySphere"
+                    label="Show one light-day sphere"
                     density="compact"
                     hide-details
                   />
@@ -406,8 +451,8 @@
           >
             <p
               v-for="(paragraph, i) in step.text"
-              class="tour-step-text"
               :key="i"
+              class="tour-step-text"
             >
               {{ paragraph }}
             </p>
@@ -710,6 +755,7 @@ const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
 
 const voyager1Location = ref<HorizonsVector | null>(null);
 const voyager2Location = ref<HorizonsVector | null>(null);
+const lightDayLocation = ref<HorizonsVector | null>(null);
 
 // what the WWT camera tracks (the scene is drawn relative to it): a spacecraft, or a solar system object
 const VOYAGER_TRAJECTORIES = { voyager1: voyager1PositionAt, voyager2: voyager2PositionAt };
@@ -778,10 +824,13 @@ const SLIDER_STEP_MS = 60 * 1000;
 import * as THREE from "three";
 import { useThreeModel } from "./three-helpers";
 import glbUrl from "@/assets/Voyager.glb?url";
+import helioGlb from "@/assets/merav.glb?url";
+import { Coordinates } from "@wwtelescope/engine";
 
 const renderThree = ref(true);
 let voyager1Model: THREE.Group | null = null;
 let voyager2Model: THREE.Group | null = null;
+let heliosphereModel: THREE.Group | null = null;
 // log10 of the models' magnification (0 is actual size)
 const modelLogScale = ref(7);
 const MIN_MODEL_SCALE = 3; // log10 of the model's magnification (0 is actual size)
@@ -789,6 +838,7 @@ const METERS_PER_AU = 149597870700;
 const MODEL_REAL_SIZE_METERS = 13;
 const showVoyagerModels = ref(true);
 const showVoyagerLabels = ref(true);
+const showHeliosphere = ref(false);
 
 function setMaximumZoomForView(tc: TrackTarget, scale: number) {
   if (tc === "voyager1" || tc === "voyager2") {
@@ -925,6 +975,69 @@ function setVoyager2ModelPosition(time: Date) {
   voyager2Model.scale.setScalar(scale / METERS_PER_AU);
 }
 
+// The heliosphere glb (merav.glb) is a point cloud of the heliopause in heliocentric Galactic coordinates, in au:
+// +x toward the Galactic center (l 0°, b 0°), +y toward l 90° (Galactic rotation), +z toward the north Galactic pole
+// the obliquity of the J2000 ecliptic (IAU 1976, 84381.448″), as in Horizons' "Ecliptic of J2000.0"
+const J2000_OBLIQUITY_DEG = 23.4392911;
+
+/**
+ * A Galactic direction in the ecliptic of J2000 (three.js X, Y, Z), like the Horizons rows. Uses WWT's
+ * Coordinates.galactictoJ2000 (the Hipparcos–Gaia matrix), not AstroCalc.galacticToJ2000 (Meeus's B1950 formula)
+ */
+function galacticToEclipticJ2000(lDeg: number, bDeg: number): THREE.Vector3 {
+  const [ra, dec] = Coordinates.galactictoJ2000(lDeg, bDeg).map(THREE.MathUtils.degToRad);
+  const eps = THREE.MathUtils.degToRad(J2000_OBLIQUITY_DEG);
+  const [x, y, z] = [Math.cos(dec) * Math.cos(ra), Math.cos(dec) * Math.sin(ra), Math.sin(dec)];
+  return new THREE.Vector3(x, Math.cos(eps) * y + Math.sin(eps) * z, -Math.sin(eps) * y + Math.cos(eps) * z);
+}
+
+
+const GALACTIC_TO_ECLIPTIC = new THREE.Quaternion().setFromRotationMatrix(
+  new THREE.Matrix4().makeBasis(
+    galacticToEclipticJ2000(0, 0),
+    galacticToEclipticJ2000(90, 0),
+    galacticToEclipticJ2000(0, 90),
+  ),
+);
+
+const HELIOSPHERE_SCALE = 0.84;
+
+/** The heliosphere model on the Sun. The three.js scene is relative to the view target, so this follows tracking */
+function setHeliosphereModelPosition() {
+  if (!heliosphereModel) {
+    return;
+  }
+  heliosphereModel.visible = showHeliosphere.value;
+  const sun = bodyCenterInScene(SolarSystemObjects.sun);
+  heliosphereModel.position.set(sun.x, sun.z, sun.y);
+}
+
+// one light-day (the distance light travels in a day) around Earth, as a faint wireframe
+const showLightDaySphere = ref(false);
+const LIGHT_DAY_AU = (86400 * 299792.458) / 149597870.7; // ≈ 173.1 au
+const geometry = new THREE.SphereGeometry(LIGHT_DAY_AU, 256, 128);
+const material = new THREE.MeshBasicMaterial({
+  color: "#17b6ff",
+  wireframe: false,
+  transparent: true,
+  opacity: 0.1,
+  depthWrite: false,
+  side: THREE.DoubleSide, 
+  blending: THREE.AdditiveBlending,
+});
+const lightDaySphere = new THREE.Mesh(
+  geometry,
+  material,
+);
+
+/** The light-day sphere on Earth. The three.js scene is relative to the view target, so this follows tracking */
+function setLightDaySpherePosition() {
+  lightDaySphere.visible = showLightDaySphere.value;
+  const earth = bodyCenterInScene(SolarSystemObjects.earth);
+  lightDaySphere.position.set(earth.x, earth.z, earth.y);
+}
+
+
 // The top label (distance, date, and was/is/will be) follows the clock at most every LABEL_THROTTLE_MS,
 // so fast playback doesn't flicker its digits. Trailing, so it ends on the time the clock stops at
 const LABEL_THROTTLE_MS = 500;
@@ -1049,13 +1162,22 @@ function setUpVoyagerScene() {
     const time = now.getTime();
     setVoyager1ModelPosition(now);
     setVoyager2ModelPosition(now);
+    setHeliosphereModelPosition();
+    setLightDaySpherePosition();
     voyager1Location.value = voyager1PositionAt(time);
     voyager2Location.value = voyager2PositionAt(time);
+    lightDayLocation.value = voyager1PositionAt(ONE_LIGHT_DAY.getTime());
     loopAtEnd();
     stopAtStart();
   });
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager1Model = model));
   useThreeModel(store, glbUrl, renderThree, (model) => (voyager2Model = model));
+  const { scene } = useThreeModel(store, helioGlb, renderThree, (model) => {
+    model.scale.setScalar(HELIOSPHERE_SCALE);
+    model.quaternion.copy(GALACTIC_TO_ECLIPTIC);
+    heliosphereModel = model;
+  });
+  scene.add(lightDaySphere);
 }
 
 // tracking //
@@ -1205,6 +1327,8 @@ const tour = useTour<TourStepContent>({
     event,
     setup: async () => {
       store.waitForReady().then(() => {
+        showHeliosphere.value = event.showHeliosphere ?? false;
+        showLightDaySphere.value = event.showLightDaySphere ?? false;
         if (timePlaying.value) {
           if (event.view) {
             // playback has the time and camera; only the model size follows the event
@@ -1400,6 +1524,7 @@ const tourSheetTour = {
     if (onLastStep.value) {
       tourFinished = true;
       showTour.value = false;
+      showControls.value = true;
     } else {
       timePlaying.value = false;
       await tour.next();
@@ -1605,7 +1730,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 // adapted from artemis-ii's zoom slider, in the theme gold instead of white
@@ -1614,7 +1739,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: flex-start;
   gap: 10px;
+  pointer-events: auto;
 
   .zoom-slider {
     writing-mode: vertical-lr;
@@ -2114,5 +2241,58 @@ body {
 
 .tour-step-text {
   margin-bottom: 0.5rem;
+}
+
+.model-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  pointer-events: none;
+  user-select: none;
+
+  > .legend-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+  }
+  
+  
+
+  .legend-preview {
+    width: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    position: relateive;
+  }
+  
+  // slash through preview
+  .legend-item.not-shown{
+    filter: grayscale(100%) opacity(0.5);
+  }
+
+  .helio-legend .legend-preview {
+    color: yellow;
+    font-weight: bold;
+  }
+
+  .ld-legend .legend-preview {
+    height: 0.75rem;
+    background: rgba(51, 153, 255, 0.5);
+    border-radius: 2px;
+  }
+}
+
+.app-is-small {
+  .model-legend {
+    position: absolute;
+    top: 80px;
+    font-size: 0.8rem;
+  }
 }
 </style>
