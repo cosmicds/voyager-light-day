@@ -256,28 +256,38 @@
                     </template>
                   </v-slider>
                 </div>
-                <div class="model-visibility">
+                <div
+                  class="model-visibility"
+                  role="group"
+                  aria-labelledby="model-visibility-label"
+                >
+                  <div
+                    id="model-visibility-label"
+                    class="model-visibility-label"
+                  >
+                    Show
+                  </div>
                   <v-checkbox
                     v-model="showVoyagerModels"
-                    label="Show Voyager Models"
+                    label="Voyager Models"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showVoyagerLabels"
-                    label="Show Voyager Labels"
+                    label="Voyager Labels"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showHeliosphere"
-                    label="Show Heliosphere"
+                    label="Heliosphere Model"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showLightDaySphere"
-                    label="Show Light-Day Sphere"
+                    label="Light-Day Sphere"
                     density="compact"
                     hide-details
                   />
@@ -1842,8 +1852,9 @@ body {
     color: rgb(var(--v-theme-primary));
   }
 
-  // 16px insets line the label and "Actual" up with the dropdown's text (v-field's 16px padding)
-  .model-size-label {
+  // 16px insets line the labels and "Actual" up with the dropdown's text (v-field's 16px padding)
+  .model-size-label,
+  .model-visibility-label {
     font-size: 12px;
     opacity: 0.8;
     padding-inline: 16px;
@@ -1872,7 +1883,7 @@ body {
 
   // lines the drawn box (inset in its icon, which is centered in a wider input) up with the 16px text inset above.
   // Measured; retune if the icon size changes
-  .model-visibility {
+  .model-visibility .v-checkbox {
     padding-left: 9px;
   }
 
