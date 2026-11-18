@@ -435,8 +435,8 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
     showHeliosphere: true,
     windowDays: 365,
     caption: `On August 25, 2012, Voyager 1 crossed into interstellar space. 
-    The yellow model shown now is from Merav Opher, and shows what astronomers believe the boundary looks like. 
-    In this model it is where gas transitions from the hot solar wind (from the Sun) to the cold gas of interstellar space.`,
+    The yellow model shown is from a simulation by astronomer Merav Opher and her team. It shows where we believe the boundary between our solar system and interstellar space is located. 
+    In this model, the boundary is where gas transitions from the hot solar wind (from the Sun) to the cold gas of interstellar space.`,
     date: new Date("2012-08-25T00:00:00Z"),
     image: interstellar,
     imageUrl: "https://science.nasa.gov/photojournal/voyager-1-entering-interstellar-space-artist-concept/",
