@@ -77,7 +77,7 @@
         </wwt-tracked-content>
 
         <!-- the light-day sphere, labelled where Voyager 1 crosses it -->
-        <wwt-tracked-content
+        <!-- <wwt-tracked-content
           :store="store"
           :position="lightDayLocation"
           :offset-x="-130"
@@ -90,7 +90,7 @@
           >
             <strong>One light-day</strong>
           </p>
-        </wwt-tracked-content>
+        </wwt-tracked-content> -->
         <wwt-loader v-model="isLoading" />
 
         <!-- This block contains the elements (e.g. icon buttons displayed at/near the top of the screen) -->
@@ -166,6 +166,23 @@
                     <path d="M0 5H10" />
                   </svg>
                 </button>
+              </div>
+              <div
+                v-if="showHeliosphere || showLightDaySphere"
+                class="model-legend"
+              >
+                <!-- just legend for heliosphere and light day sphere
+                use 3dots for the thelio, and colored patch for the light dat -->
+                <div class="legend-item helio-legend" :class="{'not-shown': !showHeliosphere}">
+                  <div class="legend-preview">
+                    ···
+                  </div>
+                  <div class="legend-label">Heliosphere</div>
+                </div>
+                <div class="legend-item ld-legend" :class="{'not-shown': !showLightDaySphere}">
+                  <div class="legend-preview"></div>
+                  <div class="legend-label">One Light Day</div>
+                </div>
               </div>
             </div>
             <div id="center-buttons">
@@ -1699,7 +1716,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 // adapted from artemis-ii's zoom slider, in the theme gold instead of white
@@ -1708,7 +1725,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: flex-start;
   gap: 10px;
+  pointer-events: auto;
 
   .zoom-slider {
     writing-mode: vertical-lr;
@@ -2208,5 +2227,50 @@ body {
 
 .tour-step-text {
   margin-bottom: 0.5rem;
+}
+
+.model-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  pointer-events: none;
+  user-select: none;
+
+  > .legend-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+  }
+  
+  
+
+  .legend-preview {
+    width: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    position: relateive;
+  }
+  
+  // slash through preview
+  .legend-item.not-shown{
+    filter: grayscale(100%) opacity(0.5);
+  }
+
+  .helio-legend .legend-preview {
+    color: yellow;
+    font-weight: bold;
+  }
+
+  .ld-legend .legend-preview {
+    height: 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 2px;
+  }
 }
 </style>
