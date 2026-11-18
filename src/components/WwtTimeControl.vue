@@ -56,7 +56,7 @@
         density="compact"
         variant="outlined"
         :color="color"
-        @click="store.setTime(new Date())"
+        @click="store.setTime(new Date()); emit('now')"
       >
         Now
       </v-btn>
@@ -86,7 +86,7 @@ function roundedRate(rate: number) {
 const store = engineStore();
 
 const emit = defineEmits<{
-  (e: "play" | "pause"): void;
+  (e: "play" | "pause" | "now"): void;
   (e: "rate-change", rate: number): void;
 }>();
 
