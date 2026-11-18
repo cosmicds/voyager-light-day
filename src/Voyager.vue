@@ -225,20 +225,20 @@
                 size="1x"
               />
               <div
-                v-if="showControls && !showTour"
+                v-if="showControls && (!showTour || !xs)"
                 id="frame-controls"
               >
                 <v-select
                   v-model="trackingCenter"
                   :items="TRACK_ITEMS"
                   item-color="primary"
-                  label="Track (camera center)"
+                  label="Track (Camera Center)"
                   density="compact"
                   hide-details
                 />
                 <!-- log10 of the model's magnification: 0 is actual size -->
                 <div class="model-size">
-                  <div class="model-size-label">Spacecraft size</div>
+                  <div class="model-size-label">Spacecraft Size</div>
                   <v-slider
                     v-model="modelLogScale"
                     :min="MIN_MODEL_SCALE"
@@ -252,32 +252,42 @@
                       <span class="model-size-end">1,000x</span>
                     </template>
                     <template #append>
-                      <span class="model-size-end">Even larger!</span>
+                      <span class="model-size-end">Even Larger!</span>
                     </template>
                   </v-slider>
                 </div>
-                <div class="model-visibility">
+                <div
+                  class="model-visibility"
+                  role="group"
+                  aria-labelledby="model-visibility-label"
+                >
+                  <div
+                    id="model-visibility-label"
+                    class="model-visibility-label"
+                  >
+                    Show
+                  </div>
                   <v-checkbox
                     v-model="showVoyagerModels"
-                    label="Show Voyager models"
+                    label="Voyager Models"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showVoyagerLabels"
-                    label="Show Voyager labels"
+                    label="Voyager Labels"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showHeliosphere"
-                    label="Show heliosphere"
+                    label="Heliosphere Model"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showLightDaySphere"
-                    label="Show one light-day sphere"
+                    label="Light-Day Sphere"
                     density="compact"
                     hide-details
                   />
@@ -1845,8 +1855,9 @@ body {
     color: rgb(var(--v-theme-primary));
   }
 
-  // 16px insets line the label and "Actual" up with the dropdown's text (v-field's 16px padding)
-  .model-size-label {
+  // 16px insets line the labels and "Actual" up with the dropdown's text (v-field's 16px padding)
+  .model-size-label,
+  .model-visibility-label {
     font-size: 12px;
     opacity: 0.8;
     padding-inline: 16px;
@@ -1875,7 +1886,7 @@ body {
 
   // lines the drawn box (inset in its icon, which is centered in a wider input) up with the 16px text inset above.
   // Measured; retune if the icon size changes
-  .model-visibility {
+  .model-visibility .v-checkbox {
     padding-left: 9px;
   }
 
