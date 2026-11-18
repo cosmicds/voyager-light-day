@@ -42,6 +42,10 @@ export interface MissionEvent {
   rate?: number;
   /** hide the tour step's time slider at this stop */
   noSlider?: boolean;
+  /** show the heliosphere model at this tour step (hidden on every other step) */
+  showHeliosphere?: boolean;
+  /** show the one light-day sphere at this tour step (hidden on every other step) */
+  showLightDaySphere?: boolean;
 }
 
 export interface TimeRange {
@@ -428,6 +432,7 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
   {
     title: "Interstellar space",
     noSlider: true,
+    showHeliosphere: true,
     windowDays: 365,
     caption: `This artist's concept depicts NASA's Voyager 1 spacecraft entering
       interstellar space. Interstellar space is dominated by the plasma, or
@@ -445,7 +450,7 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
       track: 0,
       lat: 32.36864062499995,
       lng: 80.90261612548761,
-      zoom: 724.5852368350302,
+      zoom: 1085.0,
       rotation: 0,
       angle: 0,
       modelLogScale: 5.64,
@@ -455,6 +460,8 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
   {
     title: "One light-day from Earth",
     noSlider: true,
+    showHeliosphere: true,
+    showLightDaySphere: true,
     caption: `Voyager 1 has entered interstellar space. NASA's spacecraft, which
       rose from Earth on a September morning nearly 50 years ago, has traveled farther
       than anyone, or anything, in history.`,
@@ -464,7 +471,15 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
     credit: "NASA/JPL-Caltech",
     imageTaken: "artist's concept, 2013",
     track: SolarSystemObjects.sun,
-    view: ONE_LIGHT_DAY_VIEW,
+    view: {
+      ...ONE_LIGHT_DAY_VIEW, 
+      track: 0,
+      lat: 32.36864062499995,
+      lng: 80.90261612548761,
+      rotation: 0,
+      angle: 0,
+      zoom: 1550.1
+    },
     rate: 1000000,
   },
 ];

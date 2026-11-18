@@ -837,7 +837,7 @@ const METERS_PER_AU = 149597870700;
 const MODEL_REAL_SIZE_METERS = 13;
 const showVoyagerModels = ref(true);
 const showVoyagerLabels = ref(true);
-const showHeliosphere = ref(true);
+const showHeliosphere = ref(false);
 
 function setMaximumZoomForView(tc: TrackTarget, scale: number) {
   if (tc === "voyager1" || tc === "voyager2") {
@@ -1012,7 +1012,7 @@ function setHeliosphereModelPosition() {
 }
 
 // one light-day (the distance light travels in a day) around Earth, as a faint wireframe
-const showLightDaySphere = ref(true);
+const showLightDaySphere = ref(false);
 const LIGHT_DAY_AU = (86400 * 299792.458) / 149597870.7; // ≈ 173.1 au
 const geometry = new THREE.SphereGeometry(LIGHT_DAY_AU, 256, 128);
 const material = new THREE.MeshBasicMaterial({
@@ -1323,6 +1323,8 @@ const tour = useTour<TourStepContent>({
     event,
     setup: async () => {
       store.waitForReady().then(() => {
+        showHeliosphere.value = event.showHeliosphere ?? false;
+        showLightDaySphere.value = event.showLightDaySphere ?? false;
         if (timePlaying.value) {
           if (event.view) {
             // playback has the time and camera; only the model size follows the event
