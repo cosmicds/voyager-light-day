@@ -434,10 +434,9 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
     noSlider: true,
     showHeliosphere: true,
     windowDays: 365,
-    caption: `This artist's concept depicts NASA's Voyager 1 spacecraft entering
-      interstellar space. Interstellar space is dominated by the plasma, or
-      ionized gas, that was ejected by the death of nearby giant stars
-      millions of years ago.`,
+    caption: `On August 25, 2012, Voyager 1 crossed into interstellar space. 
+    The yellow model shown now is from Merav Opher, and shows what astronomers believe the boundary looks like. 
+    In this model it is where gas transitions from the hot solar wind (from the Sun) to the cold gas of interstellar space.`,
     date: new Date("2012-08-25T00:00:00Z"),
     image: interstellar,
     imageUrl: "https://science.nasa.gov/photojournal/voyager-1-entering-interstellar-space-artist-concept/",
@@ -462,9 +461,9 @@ export const VOYAGER_1_EVENTS: MissionEvent[] = [
     noSlider: true,
     showHeliosphere: true,
     showLightDaySphere: true,
-    caption: `Voyager 1 has entered interstellar space. NASA's spacecraft, which
+    caption: [`Voyager 1 has entered interstellar space. NASA's spacecraft, which
       rose from Earth on a September morning nearly 50 years ago, has traveled farther
-      than anyone, or anything, in history.`,
+      than anyone, or anything, in history.`, `In translucent blue is the a 1 light-day sphere centered on the Earth.`],
     date: ONE_LIGHT_DAY,
     image: lightDay,
     imageUrl: "https://science.nasa.gov/photojournal/voyager-goes-interstellar-artist-concept/",
