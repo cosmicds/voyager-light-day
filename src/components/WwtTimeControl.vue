@@ -85,7 +85,7 @@ function roundedRate(rate: number) {
 
 const store = engineStore();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "play" | "pause"): void;
   (e: "rate-change", rate: number): void;
 }>();
@@ -163,6 +163,14 @@ onMounted(() => {
   watch(playbackRate, (r) => {
     rate.value = r;
   });
+});
+
+watch(playing, (play: boolean) => {
+  if (play) {
+    emit("play");
+  } else {
+    emit("pause");
+  }
 });
 
 const setTime = () => store.setTime(new Date(selectedDateTime.value + "Z"));

@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AttentionHook: typeof import('./src/components/AttentionHook.vue')['default']
     ClosableDialog: typeof import('./src/components/ClosableDialog.vue')['default']
     ImageCrossfadeSlider: typeof import('./src/components/ImageCrossfadeSlider.vue')['default']
     LightDayCountdown: typeof import('./src/components/LightDayCountdown.vue')['default']

@@ -28,6 +28,7 @@ export function usePrivacy(options: Prettify<UsePrivacyOptions>) {
     resetData: options.resetData,
     getData: options.getData,
     updateIntervalMs: options.updateIntervalMs, // optional
+    apiKey: options.apiKey,
   });
 
   // Persistent means the notice cannot be clicked away, so give it its own way

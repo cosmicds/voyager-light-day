@@ -95,7 +95,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cosmicds/voyager@workspace:."
   dependencies:
-    "@cosmicds/vue-toolkit": "npm:0.9.0"
+    "@cosmicds/vue-toolkit": "npm:0.9.2"
     "@eslint/js": "npm:^10.0.1"
     "@fortawesome/fontawesome-svg-core": "npm:^7.3.1"
     "@fortawesome/free-solid-svg-icons": "npm:^7.3.1"
@@ -133,9 +133,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cosmicds/vue-toolkit@npm:0.9.0":
-  version: 0.9.0
-  resolution: "@cosmicds/vue-toolkit@npm:0.9.0"
+"@cosmicds/vue-toolkit@npm:0.9.2":
+  version: 0.9.2
+  resolution: "@cosmicds/vue-toolkit@npm:0.9.2"
   dependencies:
     "@capacitor/core": "npm:^5.7.4"
     "@capacitor/geolocation": "npm:^5.0.7"
@@ -158,7 +158,7 @@ __metadata:
     "@floating-ui/dom": "*"
     shepherd.js: "*"
     vue-shepherd: "*"
-  checksum: 10c0/301fcbac98f6f82a5a8de3e9443866ed0ae840b570f5e5d12c51a9f377710ce52aff01bad7c553a50acab453947b7969f8457d75d831d32e0d25c79cc658fa9d
+  checksum: 10c0/005a994d0cfabd38538501984d546c7d98c14814da7b57627b42c9223ccec53948ab1ef6b3c09786d1e99ea59793ab35761358d4369f7789b042137259198f90
   languageName: node
   linkType: hard
 
@@ -1312,9 +1312,9 @@ __metadata:
   linkType: hard
 
 "csstype@npm:^3.2.3":
-  version: 3.2.3
-  resolution: "csstype@npm:3.2.3"
-  checksum: 10c0/cd29c51e70fa822f1cecd8641a1445bed7063697469d35633b516e60fe8c1bde04b08f6c5b6022136bb669b64c63d4173af54864510fbb4ee23281801841a3ce
+  version: 3.2.4
+  resolution: "csstype@npm:3.2.4"
+  checksum: 10c0/29568f520e1e47b2e6e88e2cffe3b5369f08c1245c73e69595623cafb38816bd353387e0d665ce4330cfe2c9244f2a4671abe761cbd0b535bc27fab12b6b8a25
   languageName: node
   linkType: hard
 
@@ -1775,9 +1775,9 @@ __metadata:
   linkType: hard
 
 "ignore@npm:^7.0.5":
-  version: 7.0.14
-  resolution: "ignore@npm:7.0.14"
-  checksum: 10c0/9845d63a5fd29c738b7b94bef4a304c0812453b5360f5edc0859c1428902058753dffeed0e17b9e88bf529815803ec2d31eefa9bdaea8f32154128143fae2ea9
+  version: 7.0.16
+  resolution: "ignore@npm:7.0.16"
+  checksum: 10c0/02b7958922f7d6f25f44b996576263ffb7f3b61c4d7e474c4a1723341ee55a2b88139edac7542640aff92598adafef6f353b35250f14d4c8e9efe250e84ff20c
   languageName: node
   linkType: hard
 
@@ -3214,8 +3214,8 @@ __metadata:
   linkType: hard
 
 "vuetify@npm:^3.13.5, vuetify@npm:^3.3.3":
-  version: 3.13.7
-  resolution: "vuetify@npm:3.13.7"
+  version: 3.13.8
+  resolution: "vuetify@npm:3.13.8"
   peerDependencies:
     typescript: ">=4.7"
     vite-plugin-vuetify: ">=2.1.0"
@@ -3228,7 +3228,7 @@ __metadata:
       optional: true
     webpack-plugin-vuetify:
       optional: true
-  checksum: 10c0/326b1005ce05dc855f4df61ea5731700f9a123526e5ea16651a560ef6f3bdcf055cc0babe759ec2870c06ab64610f70790ae93b98b7a52e21c3f3799034a4998
+  checksum: 10c0/516e9b4a4569f550355e6ba346ac1eba6e248edec74ddf8c258c71902e87263a4187aac4e2d0c951bb30aae6c7f182349d28708706f24d96f745b577a989b2b3
   languageName: node
   linkType: hard
 

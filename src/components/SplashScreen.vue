@@ -198,7 +198,7 @@ function closeSplashScreen() {
 
   border-radius: var(--border-radius);
   border: var(--border-thickness) solid var(--accent-color);
-  overflow: auto;
+  overflow: hidden;
   // switch the fallback fonts to serif for debugging
   font-family: "Highway Gothic Narrow", "Roboto", sans-serif;
 
@@ -272,10 +272,10 @@ function closeSplashScreen() {
 
   .splash-close-button {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: var(--fs-3);
+    right: var(--fs-3);
     text-align: end;
-    font-size: min(5vw, 4vh);
+    font-size: var(--fs-2);
     padding: 0.25rem;
     margin: -0.25rem;
   }

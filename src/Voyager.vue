@@ -275,7 +275,7 @@
             <!-- play/pause + speed to the left of the timeline; below it on small screens (see CSS) -->
             <div
               id="timeline"
-              :class="{ 'in-tour': showTour }"
+              :class="{ 'in-tour': showTour, 'with-mission-slider': !showTour && !xs }"
             >
               <wwt-time-control
                 v-model="timePlaying"
@@ -288,10 +288,12 @@
                 hide-rate-changers
                 hide-home-button
                 :hide-now="showTour"
+                @play="playClickedCounter.increment()"
               />
               <!-- the whole mission, log in time since launch -->
               <MissionTimeSlider
                 v-if="!showTour"
+                v-show="!xs"
                 id="mission-slider"
                 :start="voyagerSpan.start"
                 :end="voyagerSpan.end"
@@ -310,6 +312,7 @@
                 :step-ms="SLIDER_STEP_MS"
                 color="tour-accent"
                 hide-time
+                @mousedown="missionSliderUses.increment()"
               />
             </div>
             <!-- the countdown opens above its button, mirroring #frame-controls below the controls button.
@@ -553,7 +556,12 @@ import type { StyleValue } from "vue";
 import { watchThrottled } from "@vueuse/core";
 import { WWTControl } from "@wwtelescope/engine";
 import { WWTComponent as WorldWideTelescope, engineStore } from "@wwtelescope/engine-pinia";
-import { useWWTKeyboardControls, useFullscreen, IconButton, CreditLogos } from "@cosmicds/vue-toolkit";
+import {
+  useWWTKeyboardControls,
+  useFullscreen,
+  IconButton,
+  CreditLogos,
+} from "@cosmicds/vue-toolkit";
 
 const extraLogos = [
   {
@@ -665,6 +673,7 @@ onMounted(() => {
     setUpVoyagerScene();
     positionSet.value = true;
     layersLoaded.value = true;
+    active.value = true;
 
     createUserEntry();
     initializePrompt();
@@ -736,7 +745,7 @@ function applyTrack(target: TrackTarget) {
 }
 watch(trackingCenter, applyTrack);
 const VOYAGER_2_COLOR = "#00ffff";
-const VOYAGER_1_COLOR = "#ffda8a"; 
+const VOYAGER_1_COLOR = "#ffda8a";
 let voyager1Line: TrajectoryLine | null = null;
 let voyager2Line: TrajectoryLine | null = null;
 const showV1 = ref(true);
@@ -1149,25 +1158,40 @@ import { useGtagConsent } from "./privacy/useGtagConsent";
 // opt-out by default (US-style); index.html's region-scoped defaults keep EU visitors opted out until they say otherwise
 const gtagConsent = useGtagConsent(true);
 
+const showTour = ref(false);
+
 /** app tracking setup */
-const STORY_NAME = "voyager" as const;
-const appTime = createTrackingTimer({ active: ref(true) });
+const STORY_NAME = "voyager-light-day" as const;
+const active = ref(false);
+const appTime = createTrackingTimer({ active });
 const missionSliderUses = createTrackingCounter();
+const playClickedCounter = createTrackingCounter();
 const userGuideTime = createTrackingTimer({
   active: computed(() => showTextSheet.value && infoSheetTab.value === "user-guide"),
 });
+const tourTimer = createTrackingTimer({ active: showTour });
+const countdownTimer = createTrackingTimer({ active: showCountdown });
+let maxTourStep = 0;
 
 function resetTrackingData() {
   appTime.reset();
   userGuideTime.reset();
   missionSliderUses.reset();
+  tourTimer.reset();
+  countdownTimer.reset();
+  playClickedCounter.reset();
+  maxTourStep = 0;
 }
 
 function getTrackingData() {
   return {
     app_time_ms: appTime.getTotalTime(),
     user_guide_time_ms: userGuideTime.getTotalTime(),
+    tour_time_ms: tourTimer.getTotalTime(),
+    countdown_time_ms: countdownTimer.getTotalTime(),
     mission_slider_use_count: missionSliderUses.count.value,
+    play_clicked_count: playClickedCounter.count.value,
+    max_tour_step: maxTourStep,
   };
 }
 
@@ -1179,6 +1203,7 @@ const {
   showPrivacyPolicyInfo,
   conditionalShowPrivacyDialog,
 } = usePrivacy({
+  apiKey: import.meta.env.VITE_CDS_API_KEY ?? "",
   optOutKey: `${STORY_NAME}:optOut`,
   userIDKey: `${STORY_NAME}:userID`,
   storyPath: `/${STORY_NAME}`,
@@ -1211,18 +1236,20 @@ const {
   optOut: optOutRating,
   updateUserExperienceInfo,
   initializePrompt,
-} = useUserExperienceRating(STORY_NAME, userID, {
+} = useUserExperienceRating({
+  storyPrefix: STORY_NAME,
+  uuid: userID,
+  apiKey: import.meta.env.VITE_CDS_API_KEY ?? "",
   responseOptOut,
-  timeout: 60_000, // lets not use it for now,
+  timeout: 45_000, 
   questions: ["How do you like this app?"],
-  mixin: false,
+  mixin: true,
 });
 
 // rating's timeout runs independently of the splash/privacy dialogs, so gate its visibility on both being done first
 const showRatingDialog = computed(() => showRating.value && !showSplashScreen.value && !showDataCollectionOptOut.value);
 
 // tour setup //
-const showTour = ref(false);
 
 import { TourSheet, useTour, type BaseTourStepContent } from "@cosmicds/vue-toolkit";
 
@@ -1285,6 +1312,10 @@ const tour = useTour<TourStepContent>({
   })),
 });
 // urlState.track("tour", tour.stepID);
+
+watch(tour.stepIndex, (index: number) => {
+  maxTourStep = Math.max(maxTourStep, index);
+});
 
 // playback //
 // While playing, a frame callback sets the clock rate and the camera for wherever the clock is.
@@ -1354,8 +1385,8 @@ function playbackRateAt(time: Date, backward = false): number {
 
   // what events are in this window.
   const events = getEventsInWindow(window);
-  
-  const speedMultiplier = (showTour.value ? 1 : 2);
+
+  const speedMultiplier = (showTour.value ? 1 : 1);
 
   // get the highest valid rate
   const fastestRateInWindow = Math.max(...events.map(eventRate)) * speedMultiplier;
@@ -1405,7 +1436,7 @@ function followEventsWhilePlaying() {
 
   const backward = playbackReversed.value;
   setClockRate((backward ? -1 : 1) * playbackRateAt(now, backward));
-  
+
   const step = eventForTime(VOYAGER_1_EVENTS, now);
 
   // if not in tour - don't do tour things
@@ -1892,27 +1923,33 @@ body {
   align-items: stretch;
   margin-inline: auto;
 
-  // no scrubbing on small screens: just the buttons (the date is in #light-time)
-  #mission-slider {
-    display: none;
-  }
-
   .wwt-clock-controls {
     flex-wrap: wrap;
     justify-content: center;
   }
 
-  &.in-tour {
+  // the mission slider stacks on top like the tour's, down to phone width (xs), where the template
+  // hides it: no scrubbing there, just the buttons (the date is in #light-time)
+  &.in-tour,
+  &.with-mission-slider {
     flex: 1 1 auto;
-    // the event slider is on top here, and its thumb already sits 6px down in its own box
+    // the slider is on top here, and its thumb already sits 6px down in its own box
     padding-top: 4px;
   }
 
+  #mission-slider,
   #event-slider {
     flex: 0 0 auto;
     // stacked here, so back to full width at its own height
     align-self: stretch;
     height: auto;
+  }
+
+  // but no wider than 500px, centered over the buttons
+  #mission-slider {
+    width: 100%;
+    max-width: 500px;
+    align-self: center;
   }
 }
 
@@ -2152,6 +2189,6 @@ body {
 }
 
 .tour-step-text {
-  margin-top: 1rem;
+  margin-bottom: 0.5rem;
 }
 </style>

@@ -13,7 +13,7 @@
       @click="expanded = true"
       @keyup.enter="expanded = true"
     >
-      {{ question }}
+      <v-icon>mdi-emoticon-outline</v-icon>
     </div>
   </AttentionHook>
 
@@ -54,7 +54,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { AttentionHook, UserExperience, type UserExperienceRating } from "@cosmicds/vue-toolkit";
+import { UserExperience, type UserExperienceRating } from "@cosmicds/vue-toolkit";
+// ours, not the toolkit's: it comes in from the side
+import AttentionHook from "@/components/AttentionHook.vue";
 
 const props = defineProps<{
   showRating: boolean;
@@ -147,15 +149,16 @@ watch(
   }
 }
 
-/* teaser popup: same corner as the full card above, but shallow - just the question */
+/* teaser popup: tucked against the right-hand edge (its right side runs 10px off screen, so the
+   slide in and the bounce don't show a gap), above the countdown button */
 .user-experience-teaser.attention-hook {
   width: auto;
   height: auto;
-  right: 1em;
-  bottom: -10px;
-  border-radius: 10px;
+  right: -10px;
+  bottom: 120px;
+  border-radius: 10px 0 0 10px;
   padding: 0.6em 0.9em;
-  padding-bottom: calc(0.3em + 10px);
+  padding-right: calc(0.6em + 10px);
   z-index: 9999;
   background-color: rgba(var(--v-theme-background), 0.95);
   transition: padding 0.2s ease;
@@ -169,7 +172,7 @@ watch(
   }
 
   &:hover {
-    padding-bottom: calc(0.3em + 20px);
+    padding-right: calc(0.6em + 20px);
   }
 }
 </style>
