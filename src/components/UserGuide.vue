@@ -86,7 +86,7 @@
             Technical Note
           </h5>
           <p>Paths for Voyager 1, Voyager 2, Titan, and Miranda are created from <easyLink href="https://ssd.jpl.nasa.gov/horizons/">JPL Horizons Vector Tables</easyLink>.</p>
-          <p class="mt-1">The model for the heliosphere comes from the SHIELD "Croissant" model of the heliosphere from  <easyLink href="https://www.nature.com/articles/s41550-020-1036-0"> Merav Opher et. al. (2020)</easyLink>. The printable 3D model can be downloaded the Boston University SHIELD Drive Center <easyLink href="https://shielddrivecenter.com/community-products/">Community Products page</easyLink>.</p>
+          <p class="mt-1">The model for the heliosphere comes from the SHIELD "Croissant" model of the heliosphere by <easyLink href="https://www.nature.com/articles/s41550-020-1036-0"> Merav Opher et. al. (2020)</easyLink>. The printable 3D model can be downloaded from the Boston University SHIELD Drive Center <easyLink href="https://shielddrivecenter.com/community-products/">Community Products page</easyLink>.</p>
           <h5>
             <easyLink href="https://www.cosmicds.cfa.harvard.edu/">CosmicDS Team</easyLink>
           </h5>
