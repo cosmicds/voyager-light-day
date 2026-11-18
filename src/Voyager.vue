@@ -232,13 +232,13 @@
                   v-model="trackingCenter"
                   :items="TRACK_ITEMS"
                   item-color="primary"
-                  label="Track (camera center)"
+                  label="Track (Camera Center)"
                   density="compact"
                   hide-details
                 />
                 <!-- log10 of the model's magnification: 0 is actual size -->
                 <div class="model-size">
-                  <div class="model-size-label">Spacecraft size</div>
+                  <div class="model-size-label">Spacecraft Size</div>
                   <v-slider
                     v-model="modelLogScale"
                     :min="MIN_MODEL_SCALE"
@@ -252,32 +252,32 @@
                       <span class="model-size-end">1,000x</span>
                     </template>
                     <template #append>
-                      <span class="model-size-end">Even larger!</span>
+                      <span class="model-size-end">Even Larger!</span>
                     </template>
                   </v-slider>
                 </div>
                 <div class="model-visibility">
                   <v-checkbox
                     v-model="showVoyagerModels"
-                    label="Show Voyager models"
+                    label="Show Voyager Models"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showVoyagerLabels"
-                    label="Show Voyager labels"
+                    label="Show Voyager Labels"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showHeliosphere"
-                    label="Show heliosphere"
+                    label="Show Heliosphere"
                     density="compact"
                     hide-details
                   />
                   <v-checkbox
                     v-model="showLightDaySphere"
-                    label="Show one light-day sphere"
+                    label="Show Light-Day Sphere"
                     density="compact"
                     hide-details
                   />
