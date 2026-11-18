@@ -1514,6 +1514,7 @@ const tourSheetTour = {
     if (onLastStep.value) {
       tourFinished = true;
       showTour.value = false;
+      showControls.value = true;
     } else {
       timePlaying.value = false;
       await tour.next();
