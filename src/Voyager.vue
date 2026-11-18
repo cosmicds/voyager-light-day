@@ -322,6 +322,7 @@
                 hide-home-button
                 :hide-now="showTour"
                 @play="playClickedCounter.increment()"
+                @now="goToNowView"
               />
               <!-- the whole mission, log in time since launch -->
               <MissionTimeSlider
@@ -1361,6 +1362,12 @@ const WINDOWS = VOYAGER_1_EVENTS.map((_, i) => eventWindow(VOYAGER_1_EVENTS, i))
 const EASING_FRAMES = 30; // easing: a frame covers at most 1/EASING_FRAMES of the way to what's next
 const PALE_BLUE_DOT = VOYAGER_1_EVENTS.findIndex((e) => e.title === "Pale Blue Dot");
 const WIDE_VIEW = VOYAGER_1_EVENTS.find((e) => e.title === "Termination shock")!.view!;
+// The "Now" button will take user to a slightly tweaked version of the interstellar tour stop view.
+const INTERSTELLAR_VIEW = VOYAGER_1_EVENTS.find((e) => e.title === "Interstellar space")!.view!;
+const NOW_VIEW = { ...INTERSTELLAR_VIEW, lat: INTERSTELLAR_VIEW.lat - 10, zoom: 1200 };
+function goToNowView() {
+  goToView({ ...NOW_VIEW, time: new Date().toISOString() });
+}
 let currentStep: number | undefined | null = null; // the event the camera was set for: an index, undefined between windows, null to set it next frame
 let lastFrameMs: number | null = null; // wall time (performance.now) of the last frame while playing
 let secondsPerFrame = 1 / 60; // average frame length (wall time)
