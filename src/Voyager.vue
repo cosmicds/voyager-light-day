@@ -225,7 +225,7 @@
                 size="1x"
               />
               <div
-                v-if="showControls"
+                v-if="showControls && !showTour"
                 id="frame-controls"
               >
                 <v-select
@@ -356,7 +356,7 @@
                 :step-ms="SLIDER_STEP_MS"
                 color="tour-accent"
                 hide-time
-                @mousedown="missionSliderUses.increment()"
+                @mousedown="missionSliderTourUses.increment()"
               />
             </div>
             <!-- the countdown opens above its button, mirroring #frame-controls below the controls button.
@@ -1212,6 +1212,7 @@ const STORY_NAME = "voyager-light-day" as const;
 const active = ref(false);
 const appTime = createTrackingTimer({ active });
 const missionSliderUses = createTrackingCounter();
+const missionSliderTourUses = createTrackingCounter();
 const playClickedCounter = createTrackingCounter();
 const userGuideTime = createTrackingTimer({
   active: computed(() => showTextSheet.value && infoSheetTab.value === "user-guide"),
@@ -1224,6 +1225,7 @@ function resetTrackingData() {
   appTime.reset();
   userGuideTime.reset();
   missionSliderUses.reset();
+  missionSliderTourUses.reset();
   tourTimer.reset();
   countdownTimer.reset();
   playClickedCounter.reset();
@@ -1237,6 +1239,7 @@ function getTrackingData() {
     tour_time_ms: tourTimer.getTotalTime(),
     countdown_time_ms: countdownTimer.getTotalTime(),
     mission_slider_use_count: missionSliderUses.count.value,
+    mission_slider_tour_use_count: missionSliderTourUses.count.value,
     play_clicked_count: playClickedCounter.count.value,
     max_tour_step: maxTourStep,
   };
@@ -1288,7 +1291,7 @@ const {
   uuid: userID,
   apiKey: import.meta.env.VITE_CDS_API_KEY ?? "",
   responseOptOut,
-  timeout: 45_000, 
+  timeout: 45_000,
   questions: ["How do you like this app?"],
   mixin: true,
 });
@@ -2293,6 +2296,14 @@ body {
     height: 0.75rem;
     background: rgba(51, 153, 255, 0.5);
     border-radius: 2px;
+  }
+}
+
+.app-is-small {
+  .model-legend {
+    position: absolute;
+    top: 80px;
+    font-size: 0.8rem;
   }
 }
 </style>
