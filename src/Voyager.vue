@@ -75,6 +75,22 @@
             <strong>Voyager 2</strong>
           </p>
         </wwt-tracked-content>
+
+        <!-- the light-day sphere, labelled where Voyager 1 crosses it -->
+        <wwt-tracked-content
+          :store="store"
+          :position="lightDayLocation"
+          :offset-x="-130"
+          :offset-y="-50"
+        >
+          <p
+            v-show="showLightDaySphere"
+            class="voyager-label"
+            :style="`color: ${VOYAGER_1_COLOR}`"
+          >
+            <strong>One light-day</strong>
+          </p>
+        </wwt-tracked-content>
         <wwt-loader v-model="isLoading" />
 
         <!-- This block contains the elements (e.g. icon buttons displayed at/near the top of the screen) -->
@@ -417,8 +433,8 @@
           >
             <p
               v-for="(paragraph, i) in step.text"
-              class="tour-step-text"
               :key="i"
+              class="tour-step-text"
             >
               {{ paragraph }}
             </p>
@@ -721,6 +737,7 @@ const voyager2PositionAt = voyager2Table.positionAt(VOYAGER_FRAME);
 
 const voyager1Location = ref<HorizonsVector | null>(null);
 const voyager2Location = ref<HorizonsVector | null>(null);
+const lightDayLocation = ref<HorizonsVector | null>(null);
 
 // what the WWT camera tracks (the scene is drawn relative to it): a spacecraft, or a solar system object
 const VOYAGER_TRAJECTORIES = { voyager1: voyager1PositionAt, voyager2: voyager2PositionAt };
@@ -1130,6 +1147,7 @@ function setUpVoyagerScene() {
     setLightDaySpherePosition();
     voyager1Location.value = voyager1PositionAt(time);
     voyager2Location.value = voyager2PositionAt(time);
+    lightDayLocation.value = voyager1PositionAt(ONE_LIGHT_DAY.getTime());
     loopAtEnd();
     stopAtStart();
   });
