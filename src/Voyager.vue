@@ -2284,4 +2284,12 @@ body {
     border-radius: 2px;
   }
 }
+
+.app-is-small {
+  .model-legend {
+    position: absolute;
+    top: 80px;
+    font-size: 0.8rem;
+  }
+}
 </style>
