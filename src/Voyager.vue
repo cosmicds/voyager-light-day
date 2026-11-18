@@ -1016,12 +1016,13 @@ const showLightDaySphere = ref(true);
 const LIGHT_DAY_AU = (86400 * 299792.458) / 149597870.7; // ≈ 173.1 au
 const geometry = new THREE.SphereGeometry(LIGHT_DAY_AU, 256, 128);
 const material = new THREE.MeshBasicMaterial({
-  color: VOYAGER_1_COLOR,
+  color: "#17b6ff",
   wireframe: false,
   transparent: true,
-  opacity: 0.06,
+  opacity: 0.1,
   depthWrite: false,
   side: THREE.DoubleSide, 
+  blending: THREE.AdditiveBlending,
 });
 const lightDaySphere = new THREE.Mesh(
   geometry,
@@ -2269,7 +2270,7 @@ body {
 
   .ld-legend .legend-preview {
     height: 0.75rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(51, 153, 255, 0.5);
     border-radius: 2px;
   }
 }
