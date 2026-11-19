@@ -645,7 +645,7 @@ const fullscreen = useFullscreen();
 // ui visibility //
 const splash = urlState.get("splash")?.toLowerCase() !== "false";
 const showSplashScreen = ref(splash);
-const showControls = ref(!xs.value);
+const showControls = ref(false);
 const showCountdown = ref(false);
 // on small screens both open below the top-right buttons, in the same place: one at a time
 watch(showControls, (open) => open && smallSize.value && (showCountdown.value = false));
