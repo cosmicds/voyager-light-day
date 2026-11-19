@@ -1534,7 +1534,6 @@ const tourSheetTour = {
     if (onLastStep.value) {
       tourFinished = true;
       showTour.value = false;
-      showControls.value = true;
     } else {
       timePlaying.value = false;
       await tour.next();
@@ -1586,6 +1585,14 @@ if (urlState.loadedFromUrl.value.includes("tour")) {
 watch(showTour, (newVal) => {
   if (newVal) {
     startTour();
+  }
+});
+
+// the controls close while the tour is open, and reopen when it closes on screens with room for both
+watch(showTour, (open) => {
+  // if closed
+  if (!open) {
+    showControls.value = !xs.value; // show if not small
   }
 });
 
